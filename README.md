@@ -8,7 +8,11 @@ The target is daily trend following across a user-selected Propr watchlist, with
 
 ## Start here
 
-Give your AI agent this repository URL and ask it to read AGENTS.md and STATUS.md. It should use its existing cloud computer, check what that environment supports and continue from the current implementation. No separate hosting purchase is required by this kit. An agent must establish that its environment supports the required background work before it starts trading.
+Give your AI agent [this short starting prompt](docs/START-PROMPT.md). It should use its existing cloud computer, check what that environment supports and continue from the current implementation. No separate hosting purchase is required by this kit. An agent must establish that its environment supports the required background work before it starts trading.
+
+For developer commands, read [SETUP.md](docs/SETUP.md). The initial package includes tested strategy, risk and state components. It does not yet include a Propr execution service or historical backtest.
+
+[Validation](docs/VALIDATION.md) · [Updates](docs/UPDATES.md) · [Contributing](CONTRIBUTING.md)
 
 Website: https://prosperitylabs.co/agent
 

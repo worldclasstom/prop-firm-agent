@@ -1,43 +1,126 @@
-# Set up the development alpha
+# Set up and run the kit
 
-## With an AI agent
+These instructions are for the AI agent doing the installation. The visitor gives you the starting prompt, chooses markets and supplies access to a Propr free trial. Handle the files, configuration and commands for them.
 
-Use [the starting prompt](START-PROMPT.md). Dot, Codex, Claude or another capable coding agent can work from the same repository. The current release provides tested building blocks and a specification. It cannot yet connect to Propr or place orders.
+The kit contains executable trading code. v0.2.0-beta.1 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
 
-Use the cloud environment already available to your agent. If cloud coding requires a repository selection, select `worldclasstom/prop-firm-agent` and configure that environment through the tool's supported setup. Do not assume every tool can run a persistent trading worker.
+## 1. Install the shared release and run offline tests
 
-## Reproduce the developer checks
-
-Python 3.11 or later and Git are needed. These commands are for the agent's workspace; visitors do not need to operate a laptop as a trading host.
+Use your existing cloud computer. Do not ask the visitor to buy hosting, configure SSH or keep their laptop on. If Dot delegates to Codex cloud, use a configured cloud environment for this repository. Guide only missing in-app setup and pass the repository and full instructions to the task.
 
 ```sh
-git clone https://github.com/worldclasstom/prop-firm-agent.git
+git clone --branch v0.2.0-beta.1 https://github.com/worldclasstom/prop-firm-agent.git
 cd prop-firm-agent
-git checkout v0.1.0-alpha.1
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install .
 python -m unittest discover -s tests -v
-propfirm doctor
 propfirm init
+propfirm doctor
 ```
 
-`init` creates private configuration at `~/.prosperity-agent/config.json` and preserves an existing file. It does not request a key or make network calls. Settings and later account state belong outside the source checkout so code updates do not overwrite them.
+Python 3.11+ and a POSIX cloud runtime are required. Do not change the user's operating environment silently. `PROPFIRM_HOME` defaults to `~/.prosperity-agent`. Keep it on persistent private storage outside the source checkout. For another account, use a separate directory. `init` preserves existing configuration. Record the release and commit you installed.
 
-`doctor` reports the Python version and marks untested cloud capabilities as unverified. A successful command exit means the report was produced. It does not mean a trading environment is ready. `propfirm start` deliberately exits with a blocker in this alpha.
+Read [SPECIFICATION.md](SPECIFICATION.md). The original full build prompt is preserved unchanged there and in [original-build-prompt.txt](original-build-prompt.txt). Use [REQUIREMENTS.md](REQUIREMENTS.md) to check implementation and outstanding validation.
 
-## Before a trial can start
+## 2. Check the cloud runtime and prepare the watchlist
 
-Implement the missing components listed in STATUS.md, using docs/SPECIFICATION.md as the acceptance criteria. Then verify the actual platform's persistent storage, secret input, outbound API access, saved daily schedule, continuous risk worker and recovery across idle/task boundaries. Record observations and timestamps in private reports. A launched process is not proof that it survives the end of a task.
+Ask the visitor which Propr markets they want. Use `propfirm markets` for native Hyperliquid perpetuals and `propfirm markets --dex xyz` for that builder's markets. Preserve exact identifiers such as `xyz:GOLD`; other namespaces must be verified against the provider's metadata.
 
-After the offline checks pass, connect an explicitly selected Propr free-trial account using the platform's supported credential entry. Keep keys out of this repository, issues and reports. Read the account and reconcile its real definitions; do not infer trial status from its name or a user-written flag. Confirm fills and protective stops on Propr when a genuine signal occurs. Do not force a trade to produce a screenshot.
+Use `examples/runtime.json` as a template in the private kit directory. Record observations for persistent storage, supported secret entry, outbound HTTPS to `api.propr.xyz` and `api.hyperliquid.xyz`, background Python execution, recovery across idle/task boundaries and the platform's process supervisor. Mark a check verified only after observing it. Include the actual cloud host identity in `host_identity` and set `PROPFIRM_HOST_ID` to that same value in the worker environment.
 
-## Builder attribution
+`propfirm runtime-probe --seconds 600` writes a harmless heartbeat. Run it through the platform's supported background mechanism, end the initiating task where supported, then inspect whether timestamps continued. A probe completing while you watched it is not evidence of surviving task termination. Record the test interval and result, including any remaining uncertainty. Do not assume `nohup`, systemd or a Dot reminder is sufficient. The runtime evidence is checked at startup and must be less than seven days old. If the platform cannot support the worker, state the specific blocker and leave trading off.
 
-The public default is `builder_pigUW7hSDKW52DhhFxFyYkRVxq3T7FIq`. The prepared Propr request uses `X-Builder-Code`; the trader's private key uses `X-API-Key`. The initial helper accepts a replacement code or an empty string to omit attribution. No requests are sent in this alpha. Future execution must read the `PROPR_BUILDER_CODE` environment setting, preserving an explicitly empty opt-out.
+## 3. Connect and verify the selected account
 
-Attribution does not change trading rules or sizes. We do not claim a reward rate or commission entitlement for the code. The referral link remains separate.
+After offline tests pass, ask for the API key and the explicit free-trial account ID. Prefer the platform's secret input and environment variable `PROPR_API_KEY`. Domain-scoped secret injection is supported by using the platform's documented mechanism; do not mistake a proxy placeholder for an invalid key. Alternatively, run `propfirm credentials` and provide the key through its hidden input. It saves a mode-0600 `.env` outside the checkout. Never put a key in a command argument, repository, report or issue.
 
-## Updates
+```sh
+propfirm inspect --account-id 'THE_SELECTED_ACCOUNT_ID'
+```
 
-Follow [UPDATES.md](UPDATES.md). This project does not automatically replace code while an account has open positions.
+This makes authenticated reads and saves `setup/account-inspection.json` privately. It contains the exact account, matching challenge attempt and linked challenge. It sends no orders. The official docs leave some account fields unspecified, so use this observed response to populate `account_mapping` in private `config.json`. Do not guess a field, use an account name as proof, or set `trial=true` locally as a substitute for Propr's response.
+
+Each mapping is `{ "source": "account" | "attempt" | "challenge", "path": ["actual", "field"] }`. Numeric fields can be strings or numbers. Required mappings:
+
+| Mapping | Meaning |
+| --- | --- |
+| `trial` | A server-returned explicit trial/type/mode field, with `equals: true` or the server's literal `trial` / `free_trial` value. |
+| `starting_balance` | Original challenge balance. Must remain fixed. |
+| `day_start_balance` | Propr's current UTC day-start balance, not current equity. |
+| `day_reference` | The date/ISO timestamp belonging to that day-start reference. |
+| `balance` | Current account balance. |
+| `equity` | Current account equity, including open P&L. |
+| `daily_loss_fraction` | Must equal 0.03. Add `scale: 0.01` if the API expresses it as 3 rather than 0.03. |
+| `max_drawdown_fraction` | Must equal 0.06. Same explicit scale convention. |
+| `profit_target_fraction` | Must equal 0.10. Same explicit scale convention. |
+| `drawdown_type` | Explicit static drawdown field, with `equals: "static"`. |
+
+If no direct equity field exists, map `unrealized_pnl` and `isolated_position_margin` instead. The official SDK computes equity as balance + unrealised P&L + isolated position margin. Verify this against the actual account and dashboard before approval. Record field meanings and source evidence in `mapping_evidence`. If the needed values cannot be established, report the missing field or schema conflict; do not bypass verification. Account adapters can be improved centrally after the first real response is observed.
+
+For each selected instrument, fill a market object from verified API/documentation metadata:
+
+```json
+{
+  "asset": "EXACT_PROVIDER_IDENTIFIER",
+  "base": "EXACT_PROPR_BASE",
+  "quote": "USDC",
+  "product_type": "perp",
+  "sz_decimals": 2,
+  "quantity_step": "0.01",
+  "minimum_quantity": "VERIFIED_VALUE",
+  "minimum_notional": "VERIFIED_VALUE",
+  "multiplier": "VERIFIED_USDC_VALUE_PER_PRICE_POINT_PER_UNIT",
+  "sessions_utc": "24/7",
+  "stop_supported": true,
+  "evidence": "Source and observation establishing these fields",
+  "fee_per_side": "VERIFIED_OR_DISCLOSED_ASSUMPTION",
+  "slippage_per_side": "DISCLOSED_ASSUMPTION",
+  "daily_funding_cost": "VERIFIED_OR_DISCLOSED_ASSUMPTION"
+}
+```
+
+The strings marked VERIFIED are instructions, not valid configuration values. Do not copy the illustrative precision or 24/7 session without checking the chosen instrument. For noncontinuous sessions, use `[{"weekday": 0, "start_minute": 0, "end_minute": 1440}]` with actual UTC windows, split at midnight. Update windows for seasonal/calendar changes and do not infer that an underlying stock's exchange hours equal its perpetual's hours. This adapter supports verified linear USDC perpetuals across asset classes; report any unsupported contract or settlement currency without substituting another market.
+
+`verify` rechecks Propr market availability via the documented margin-config read, metadata precision, at least 60 complete daily bars, trial identity and challenge rules. It never changes leverage. Verify stop support from the current documented instrument/API capability; the first actual fill must then confirm its protection at Propr.
+
+```sh
+propfirm verify
+propfirm backtest
+```
+
+Read private `reports/backtest.md`. The daily-data model uses next-bar-open fill proxies and disclosed per-instrument fees/slippage/funding assumptions. It cannot prove IOC fill rates or establish which entry type performs better. Missing/inadequate data and possible intraday breaches are reported as limitations. Defaults are assumptions, not measured account costs.
+
+## 4. Start and verify actual trial trading
+
+Use an empty, dedicated trial account so the service can manage every position on it. Keep `account_mode` set to `trial`. Finish runtime evidence, record the config digest with the command below, and set `checked_at` to the actual observation timestamp. The setup agent handles this technical step.
+
+```sh
+python -c 'from propfirm.config import root_dir, read_json, digest; print(digest(read_json(root_dir()/"config.json")))'
+propfirm approve-trial --account-id 'THE_SELECTED_ACCOUNT_ID'
+propfirm start
+```
+
+`start` is the real trading service, not a dry run. Run it under the verified cloud supervisor. It polls risk every five seconds plus API latency, starts risk monitoring before the first scan, and performs one daily scan at/after 00:10 UTC. A startup after that time gets one scan of the latest completed daily bar; durable intent keys prevent duplicate entries. A single account-state lock prevents a second local worker. Do not run the same account from a second cloud environment.
+
+Orders go to Propr when a rule qualifies. There is no forced demo trade. The default is limit/IOC at the fresh ask or bid. Market/IOC is an explicit `entry_order_type` option. Partial fills receive protective stops; an unconfirmed stop triggers a latched shutdown. API interruptions block entries and preserve known stops. The service retries shutdown reconciliation until it confirms flat, all orders terminal and no unresolved intent.
+
+```sh
+propfirm status
+```
+
+Verify the actual worker PID/supervisor, current risk heartbeat, UTC schedule, Propr orders, fills and stop IDs. Check again after the initiating task ends. Report whether it is connected, running without a signal, submitted, filled and protected, or blocked. A passing mock test is not a real fill test. Return the checklist, tests, backtest and daily report. Do not send routine chatter; notify the visitor about errors, halts and required decisions through a supported channel they authorize.
+
+## Stop, recovery and paid accounts
+
+`propfirm stop` requests flattening through the active worker. Check `status` for `shutdown_complete` and verify Propr is flat. If the worker is down, restart it through the supervisor so its persistent stop/kill latch can finish reconciliation. Do not clear state to get around a failure. If you must intervene in Propr, reconcile afterward. Closing a chat or canceling a Dot reminder does not close positions.
+
+`propfirm resume-entries` clears an entry block only after reconciliation; it does not clear a kill. `propfirm reset-halt --account-id ID --confirm-flat` is an explicit manual reset, allowed only with a stopped worker and fresh confirmation of no positions or active orders. It preserves intent history, so it cannot repeat the same day's entry.
+
+A paid challenge requires a separate private state directory, explicit account ID and `account_mode: "paid"`, observed proof of its mode and rules, fresh checks, and the separate `approve-paid --account-id ID --acknowledge-paid-risk` command. Do not perform that transition unless the user explicitly authorizes paid trading. The kit never purchases a challenge, transfers funds or requests payouts.
+
+## Attribution and updates
+
+The default `X-Builder-Code` is `builder_pigUW7hSDKW52DhhFxFyYkRVxq3T7FIq`. `PROPR_BUILDER_CODE` overrides it; an explicitly empty value disables it. `X-API-Key` uses the trader's separate key. Both headers go only to `https://api.propr.xyz`; redirects are refused. Attribution does not change strategy, sizing or fees, and no reward entitlement is promised.
+
+See [UPDATES.md](UPDATES.md) for release checks and a tested, separate checkout. Never auto-update a running trader.

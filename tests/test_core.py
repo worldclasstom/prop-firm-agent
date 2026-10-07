@@ -165,6 +165,14 @@ class AttributionTests(unittest.TestCase):
 
 
 class SetupTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.env = patch.dict('os.environ', {'PROPFIRM_HOME': self.temp.name})
+        self.env.start()
+    def tearDown(self):
+        self.env.stop()
+        self.temp.cleanup()
+
     def test_init_preserves_config_and_private_permissions(self):
         with tempfile.TemporaryDirectory() as folder:
             args = ['propfirm', 'init', '--directory', folder]
@@ -186,7 +194,7 @@ class SetupTests(unittest.TestCase):
     def test_start_fails_clearly(self):
         result = subprocess.run([sys.executable, '-m', 'propfirm', 'start'], capture_output=True, text=True)
         self.assertEqual(result.returncode, 2)
-        self.assertIn('unavailable', result.stderr)
+        self.assertIn('Setup or runtime check failed', result.stderr)
 
 
 if __name__ == '__main__':

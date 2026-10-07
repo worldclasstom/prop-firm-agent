@@ -11,3 +11,15 @@
 - The release adds this validation record after those checks; executable source is unchanged.
 
 Keep trial evidence, account identifiers and operational reports private. Publish a redacted validation summary after actual execution tests, distinguishing no signal, submitted, filled, protected, recovered and stopped.
+
+## 2026-10-07: executable trial-testing beta
+
+The beta adds the real HTTP order path, execution state machine, public market data, scenario backtest and supervised worker. Synthetic fixtures deliberately label unmapped account fields `fixture_*`; they are not invented claims about the Propr API schema.
+
+All 64 automated tests passed locally. Automated checks cover entry/stop/exit payloads, partial fills, lost responses, pagination, both order types, duplicate scans/restart, rejected stops/closes/cancels, unresolved shutdown, stale account data, process locking, runtime evidence, paid-account separation, next-bar backtest causality, cost overrides, real request header encoding, preserved specification and worker startup/scan/stop. The worker test runs actual scheduler/monitor threads against a simulated client and confirms flat shutdown. A separate test confirms expired runtime evidence permits only safety reconciliation for previously authorized exposure.
+
+Public Hyperliquid reads returned 234 native instruments, 400 completed BTC daily bars and 289 xyz:GOLD daily bars. Both histories ran through the scenario model. Results are connectivity/model checks, not published performance evidence.
+
+The full previous landing-page prompt matched the archive before the page was shortened. SHA-256 is recorded in original-build-prompt.sha256 and pinned in the test suite.
+
+Still unverified: authenticated Propr account mapping, actual trial fills/stops, broker failure recovery, and background execution across Dot task/idle boundaries. These require a user's trial account and the intended cloud environment. Exact IOC fills and intraday event order cannot be inferred from daily bars; the backtest explicitly labels its approximations.

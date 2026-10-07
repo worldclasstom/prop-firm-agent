@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "account_id": "REPLACE_WITH_SELECTED_ACCOUNT",
+  "account_mode": "trial",
+  "entry_order_type": "limit",
+  "markets": [],
+  "account_mapping": {},
+  "mapping_evidence": "",
+  "backtest_costs": {
+    "fee_per_side": "0.00075",
+    "slippage_per_side": "0.0005",
+    "daily_funding_cost": "0.0001"
+  }
+}

@@ -1,2 +1,2 @@
-"""Prosperity Labs reference components. No trading service in this alpha."""
-__version__ = "0.1.0a1"
+"""Prosperity Labs Propr free-trial trading kit."""
+__version__ = "0.2.0b1"

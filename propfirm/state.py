@@ -16,7 +16,7 @@ def ulid() -> str:
 class Store:
     def __init__(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        self.db = sqlite3.connect(path, timeout=10)
+        self.db = sqlite3.connect(path, timeout=10, check_same_thread=False)
         path.chmod(0o600)
         self.db.execute('PRAGMA journal_mode=WAL')
         self.db.execute('PRAGMA synchronous=FULL')
@@ -57,3 +57,20 @@ class Store:
     def kill_reason(self) -> str | None:
         row = self.db.execute("SELECT value FROM flags WHERE key='kill'").fetchone()
         return row[0] if row else None
+
+    def get(self, key, default=None):
+        row = self.db.execute('SELECT value FROM flags WHERE key=?', (key,)).fetchone()
+        return json.loads(row[0]) if row else default
+
+    def put(self, key, value):
+        with self.db:
+            self.db.execute('INSERT INTO flags VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
+                            (key, json.dumps(value, sort_keys=True, allow_nan=False)))
+
+    def intent(self, key):
+        row = self.db.execute('SELECT intent_id, payload FROM intents WHERE logical_key=?', (key,)).fetchone()
+        return {**json.loads(row[1]), 'intentId': row[0]} if row else None
+
+    def all_intents(self):
+        return [(key, {**json.loads(payload), 'intentId': iid}) for key, iid, payload in
+                self.db.execute('SELECT logical_key, intent_id, payload FROM intents')]

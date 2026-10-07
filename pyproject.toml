@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "prosperity-prop-firm-agent"
-version = "0.1.0a1"
+version = "0.2.0b1"
 description = "Prosperity Labs Propr agent development kit"
 requires-python = ">=3.11"
 readme = "README.md"
 
 [project.scripts]
-propfirm = "propfirm.__main__:main"
+propfirm = "propfirm.__main__:entrypoint"
 
 [tool.setuptools]
 packages = ["propfirm"]

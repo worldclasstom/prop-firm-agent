@@ -1,0 +1,33 @@
+{
+  "checked_at": "",
+  "host_identity": "",
+  "config_sha256": "",
+  "cloud_environment": {
+    "verified": false,
+    "observation": ""
+  },
+  "persistent_storage": {
+    "verified": false,
+    "observation": ""
+  },
+  "private_secrets": {
+    "verified": false,
+    "observation": ""
+  },
+  "network_access": {
+    "verified": false,
+    "observation": ""
+  },
+  "background_execution": {
+    "verified": false,
+    "observation": ""
+  },
+  "idle_recovery": {
+    "verified": false,
+    "observation": ""
+  },
+  "supervisor": {
+    "verified": false,
+    "observation": ""
+  }
+}

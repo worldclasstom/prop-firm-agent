@@ -1,17 +1,18 @@
 # Versions and updates
 
-Use a tagged release for a repeatable setup. Alpha releases are development snapshots; they are not verified trading releases. GitHub's release notes state what was tested and what remains unavailable. Subscribe to releases on the repository to hear about changes.
+Install an exact release. `v0.2.0-beta.1` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence.
 
-Each user has an independent account and private state. Sharing source does not give Prosperity Labs access to that account or create a centrally managed trading service.
+```sh
+propfirm check-update
+propfirm prepare-update --version v0.2.0-beta.1
+```
 
-## This alpha
+The first command reads releases and notes. The second clones the requested release into a separate directory under the private kit home, creates a virtual environment and runs the tests with isolated test state and no inherited API key. It never changes or restarts the running worker. A visitor normally uses this shared upstream; fork only when contributing a change.
 
-No trading service is running, so testing another version means making a new checkout and following SETUP.md for that exact tag. Keep `~/.prosperity-agent/` outside both checkouts. Never copy API keys into a repository.
+Before applying an update, get the user's approval, review release notes and use a maintenance window. Request `propfirm stop`, keep the risk worker alive while it cancels entries, closes positions and reconciles, then verify `shutdown_complete` and the account itself. Stop the cloud supervisor only after confirmed flat. Back up the private kit home. Do not overwrite or publish its key, configuration, SQLite state, intent history, halt flags or reports.
 
-## Required before executable trading releases
+Use the prepared checkout's virtual environment with the same persistent `PROPFIRM_HOME`. Run tests and verification. Review any documented migrations. This release's SQLite initialization preserves existing tables and intent IDs. Never delete state to fix an upgrade or rollback.
 
-The updater must report the installed and available versions and show release notes. Applying an update needs the user's approval. It must preserve configuration, account selection, order intent IDs, daily deduplication, halts and trading history.
+A kill/stop latch persists across versions. Reset only through `reset-halt --account-id ID --confirm-flat` after reviewing the reason. Approval is bound to configuration, account mode and executable version, so run the relevant trial/paid approval command again before switching the supervisor to the new executable. Verify status, reconciliation, stops and schedule after restart.
 
-Do not run `git pull` or install over a live worker. First block new entries. Reconcile orders, positions and protective stops. Use a verified maintenance procedure that keeps protection active; prefer an update window with no exposure. Back up private state, test migrations and prevent two versions from trading the same account at once. Verify reconciliation and worker health before re-enabling entries. A kill latch must survive an update or rollback.
-
-Automatic live updates and a state-aware updater are not implemented in v0.1.0-alpha.1. They are acceptance criteria for the execution release, not current capabilities.
+There is deliberately no unattended apply/update command. Preparing code is separate from applying it to a trading account. Rollback also needs a stopped, flat account and a compatible state schema; do not blindly restore old state after new orders.

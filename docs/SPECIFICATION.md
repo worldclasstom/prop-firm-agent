@@ -1,0 +1,269 @@
+# Agent specification
+
+Approved Agent Kit specification, October 7, 2026. This describes the target behavior; see STATUS.md for what is implemented and verified.
+
+```text
+Help me build a Python trading agent to attempt a prop firm challenge on Propr (https://www.propr.xyz).
+Build and start automated trading on my verified free trial account.
+Passing is the aim, not a promise. Orders must reach Propr when a rule
+qualifies. Reports alone or local paper trading are not the deliverable.
+
+Work through four stages. Keep explanations short. Reuse completed setup
+and saved answers. Ask only for missing information or required permissions.
+Keep a persistent checklist so another task can resume without starting over.
+
+1. CHECK THE CLOUD ENVIRONMENT
+Use the cloud computer already provided by my AI agent. Do not ask me to
+rent a server, choose a hosting provider, configure SSH or keep my laptop on.
+Inspect the actual runtime and current platform documentation first.
+
+For Dot, use its cloud computer and supported coding tools. If delegating
+to Codex cloud, first check for a configured environment and repository.
+OpenAI documents this prerequisite at:
+https://learn.chatgpt.com/docs/dots/tasks-and-memory
+https://learn.chatgpt.com/docs/environments/cloud-environments
+If it is missing, guide me through only the required in-app setup and resume
+the same project. Do not silently create a local task or claim delegation
+succeeded without a task and environment. Pass the full specification and
+project location to the coding task; it does not inherit this conversation.
+Other cloud agents must verify their own equivalent capabilities. A regular
+chat can help write code but must not claim it has started a trading service.
+
+Check persistent files, supported secrets, Python/dependencies, access to
+Propr and Hyperliquid, saved daily schedules and background Python execution.
+Configure only needed domains through supported controls, honoring platform
+permissions. Do not assume root, systemd or an unrestricted network.
+Dot's always-on availability does not establish a custom process's lifetime.
+Verify idle/task-ending behavior, recovery, timing and applicable limits.
+An LLM wake-up or reminder is not a continuous deterministic risk monitor.
+Record each check as verified, failed or unverified, with the observation.
+Continue the offline build if runtime checks are incomplete, but do not
+start trading or substitute external hosting without my instruction.
+
+Preserve existing files and create a persistent trend-agent project. Ask
+which markets I want to trade and save the choice. Do not request the API
+key until stage 3. Use public data and mocked account responses to build.
+
+2. BUILD AND TEST
+Read Propr's current rulebook and official SDK before writing integration
+code. Get the SDK from https://github.com/XBorgLabs/propr-docs and inspect
+python/propr_sdk.py and its dependencies. Record the commit used. If the
+rulebook, SDK or account definitions conflict with this specification,
+report the exact conflict instead of guessing or silently changing rules.
+
+Use deterministic Python for signals, orders and risk checks. Dot builds,
+coordinates and explains; free-form LLM judgments must not decide trades.
+
+Market data comes from Hyperliquid's public info API: candleSnapshot with
+the daily interval for history and daily closes, and the documented live
+quote interface for execution. Resolve exact native/HIP-3 identifiers and
+contracts. Never substitute spot data or strip namespace prefixes.
+Orders, positions and account state go through Propr's SDK/API. Read the
+real methods, payloads, account equity definitions and supported order types.
+Do not guess field names. Handle pagination on account/order/position/trade
+lists; a first page is not a complete reconciliation.
+
+Persist each order intent and its ULID before submission. Reuse that exact
+intentId and payload for a retry of the same logical order. The SDK's
+create_order() currently creates a fresh ULID each call; do not blindly
+retry it. Inspect create_orders() with an explicit intentId or implement
+a documented client wrapper. Reconcile ambiguous responses against Propr
+before resubmitting. If the outcome cannot be resolved, halt new entries.
+Keep durable signal-date deduplication and a shared lock across workers.
+
+The challenge rules the agent must monitor and enforce:
+- Daily loss limit 3% of the start-of-day balance, checked against EQUITY
+  including unrealised P&L. The balance reference resets at 00:00 UTC.
+  The agent halts new entries and cancels pending entry orders when equity
+  is 2% below the start-of-day balance. Latch this halt until the next
+  daily run after the reset. Existing stops and exits still apply.
+- Maximum drawdown 6% from the starting balance, static, measured on EQUITY
+  including unrealised P&L on open positions. The agent kills itself when
+  equity is 4.5% below the starting balance.
+- Touching either limit closes the account permanently, even intraday.
+  Stops and risk checks cannot guarantee that a limit will never be hit.
+- Profit target 10%. No time limit.
+
+The trading rules, which you must implement exactly and must not "improve":
+Markets: do not hard-code a crypto-only universe or a fixed market count.
+During setup, ask me to choose a watchlist from the markets available on my
+Propr account across crypto, equities, indices, commodities and FX. Verify
+API order and stop support, exact identifiers, underlying data mappings,
+contract multipliers, settlement currency, tick/size limits and trading hours.
+Save these in markets.json. Do not guess symbols or silently replace an
+unsupported market. Report exclusions. Freeze the list for a paid challenge.
+Require at least 60 complete daily bars per market for indicators and an
+initial historical test. Fetch up to 400 available bars, and report the actual
+history used; short history is not evidence of robustness. Do not fabricate
+missing bars. Skip entries on stale prices, market closures or incomplete bars.
+Use only completed bars and exclude the signal bar from lookback windows.
+If more signals qualify than slots, rank by previous completed day's USD
+notional volume descending, then exact market identifier. Apply one shared
+portfolio risk budget across all asset classes.
+Timeframe: daily bars. The signal scan runs once a day at 00:10 UTC.
+Entry long: daily close above the highest high of the previous 20 days.
+Entry short: daily close below the lowest low of the previous 20 days.
+One position per market. No adding to positions.
+ATR(20): use Wilder smoothing, matching the Turtle N recurrence. True range
+is max(high-low, abs(high-previous_close), abs(low-previous_close)). Seed
+with the mean of the first 20 true ranges, then ATR = (19*previous_ATR + TR)/20.
+Use ATR from the completed signal bar for sizing and the initial stop.
+Initial stop: 2 x ATR(20) from the actual fill price, placed on Propr
+immediately after each fill as a reduce-only stop_market order. Protect
+partial fills immediately and reconcile quantity as further fills arrive.
+Round a long stop up and a short stop down to the allowed tick so rounding
+does not increase planned risk. Never loosen an existing protective stop.
+Size: risk 0.4% of the STARTING balance per trade. Convert risk dollars /
+(2 x ATR) to order units using verified contract and currency metadata.
+Round down to the permitted size, and skip if below the minimum. Maximum three open positions. Propr applies leverage automatically;
+do not attempt to change it. Cap total gross notional across positions and
+pending entries at 2 x current equity by reducing or skipping new entries.
+Exit long: daily close below the lowest low of the previous 10 days.
+Exit short: daily close above the highest high of the previous 10 days.
+Or the stop fires, whichever first. No profit targets.
+Daily halt: equity 2% below the start-of-day balance means cancel pending
+entries and open nothing until the next daily run after the reset.
+Existing stops and exits still apply.
+Kill switch: equity 4.5% below starting balance latches HALT immediately.
+Block entries and cancel pending entry orders first. Reconcile all fills,
+close positions with reduce-only orders and confirm they are flat. Keep
+protective stops until their positions are confirmed flat; then cancel
+remaining orders. Write reports/HALT.md. Only mark shutdown complete when
+fresh account reads confirm no positions and no remaining orders.
+If a close/cancel fails or its outcome is unknown, keep the halt latched,
+continue reconciliation and rate-limited retries, and report unresolved
+exposure. Do not exit the safety worker or claim success while exposure is
+unresolved. If the runtime fails, the persistent halt must prevent new
+entries on recovery. Resume safety reconciliation, never trading, until
+flat. Starting new trading after a kill requires explicit manual reset.
+
+Execution, identical in the rule sheet, live code and backtest:
+- Default ENTRY_ORDER_TYPE=limit, timeInForce=IOC. After the completed daily
+  signal and risk checks, buy at the fresh best ask or sell at the fresh
+  best bid, rounded to valid ticks without worsening the limit price.
+  Get quotes through the documented public data interface. Reject crossed,
+  stale or missing quotes and closed markets. No post-only entries.
+- One entry attempt per market per signal date. IOC leaves no resting entry;
+  confirm the terminal status and cancellation of any unfilled remainder.
+  Protect partial fills. Do not top them up, chase the price or fall back to
+  a market order. Count in-flight entries in the three-position limit.
+- ENTRY_ORDER_TYPE=market is an explicit user option, never an automatic
+  optimization. If selected, use Propr's documented market/IOC behavior.
+  Reconcile fills and protect them by the same rules. Document slippage;
+  neither option guarantees a fill, execution price or trading performance.
+- Use reduce-only market/IOC orders for strategy exits and emergency closes.
+  Confirm the actual closed quantity. Stops remain stop_market/reduce-only.
+- The 20-day/10-day breakout idea is Turtle-inspired. This daily-close,
+  no-pyramiding, low-risk adaptation is not the original Turtle system.
+  Do not claim either entry type is statistically better without a fair test.
+
+
+Create a small project with these responsibilities:
+- data.py resolves markets, caches up to 400 completed daily bars and checks
+  history, sessions, quotes and freshness. Save verified metadata in markets.json.
+- strategy.py contains pure functions implementing the exact rules, with
+  docstrings quoting them. Use the same functions in the backtest and live scan.
+- backtest.py uses instrument-specific fees, funding and slippage. Trade
+  only after the signal bar has closed; never fill at that bar's close using
+  knowledge learned at the close. Model the selected order type honestly.
+  Daily bars cannot establish IOC fills, queue position or intraday breach
+  order. Label approximations and missing data; use finer data when available.
+  If comparing limit and market execution, hold signals, risk, dates and
+  costs consistent, account for unfilled orders and use a held-out period.
+  Report when data cannot support a comparison. Never auto-select a winner.
+  Write backtest.md with equity, win rate, average win/loss, max drawdown,
+  trades per market, longest flat stretch and time to target when reached.
+  Define challenge start windows and report the count of simulated failures
+  with the denominator and reasons. Do not present daily-close checks as
+  proof that an intraday loss limit was never breached. Explain limitations.
+- run_daily.py refreshes completed bars, reconciles the account and orders,
+  checks halts and monitor health, handles exits, then evaluates entries.
+  No orders before the runtime and free-trial checks pass. Protect every
+  fill through the documented positionId/grouped-order mechanism. Confirm
+  protective orders at Propr. If a stop cannot be confirmed, latch an entry
+  halt and safely close/reconcile that exposure using the shutdown protocol.
+- risk_monitor.py runs between scans, uses documented Propr account updates
+  to enforce both equity limits and shares locks, order state and halts with
+  run_daily.py. Document the update cadence, maximum data age and reconnect
+  policy. Stale/missing account data or a dead monitor blocks new entries.
+  Reconcile on recovery; do not replay stale signals or clear a kill latch.
+- reports/YYYY-MM-DD.md records signals, orders, fills, stops, exits, reasons,
+  equity, balance, starting/day-start balances, realised P&L, open positions
+  and distance to each stop and challenge limit. Never include credentials.
+- README explains platform requirements, setup, configuration, status,
+  reports, account changes and how to stop and confirm trading has stopped.
+  Canceling a schedule, stopping a Dot task and closing positions are
+  separate actions. Document each without leaving positions unprotected.
+
+Use mocks to test lookbacks, Wilder ATR, rounding, contract sizing, both
+equity limits, midnight reset, halt persistence, stale data, session closures,
+limit/market order payloads, partial fills, stop failures, pagination,
+duplicate daily runs and retries after lost responses. Test rejected closes
+and cancellations: shutdown must remain incomplete until verified flat.
+Test scheduling, background execution and recovery with simulated responses,
+including across idle periods and task endings where supported. Record
+timestamps and observations, not just that a process was launched.
+
+3. CONNECT AND VERIFY THE FREE TRIAL
+After offline tests pass, ask for my Propr API key and free-trial account ID
+if they are not already configured. Use the platform's credential input
+when available and explain the entry step plainly. Handle storage yourself.
+Save the key in supported secret storage or a protected .env with mode 0600.
+Load PROPR_API_KEY and CHALLENGE_ACCOUNT_ID at runtime. Keep the key out of
+replies, Git, reports, screenshots, shared files and command arguments.
+Codex cloud supports direct environment values and domain-scoped network
+secrets. Use the supported delivery method; do not mistake a proxy secret's
+placeholder for an invalid API key or demand its raw value in a file.
+
+Use Propr's account/profile reads to verify the exact ID is my free trial.
+Never auto-select an active account. If its type cannot be verified, stop
+and ask. Print the ID and trial/paid status on each run. Verify chosen markets
+and stops are supported by this account before enabling them. Report any
+exclusions and ask about changes rather than silently replacing markets.
+Paid accounts require an explicit ID change and separate opt-in. Do not
+buy challenges, request payouts or transfer funds. Hyperliquid is for public
+data only; Propr access is limited to setup/account/profile reads and
+order, position and trade endpoints needed for this trading program.
+
+BUILDER ATTRIBUTION
+- Include Prosperity Labs builder attribution in the generated agent.
+  Set the default PROPR_BUILDER_CODE to this exact value:
+  builder_pigUW7hSDKW52DhhFxFyYkRVxq3T7FIq
+  Send it as X-Builder-Code on requests to https://api.propr.xyz only.
+  Keep X-API-Key separate and load the trader's own key from private storage.
+  The Builder Code does not replace authentication or choose an account.
+- Apply attribution through the shared Propr HTTP client, including SDK
+  requests. Inspect the SDK and use its supported header configuration, or
+  a small client wrapper if needed. Do not assume a builder-code parameter
+  exists. Do not send either header to Hyperliquid or another origin, and
+  do not forward credentials or attribution across an off-origin redirect.
+- Allow PROPR_BUILDER_CODE to be overridden through configuration. An
+  explicitly empty value disables attribution and omits X-Builder-Code;
+  do not silently replace an empty value with the default.
+- Explain builder attribution and how to disable it in the README. It must
+  not change the trading rules, position sizes or fees. Do not claim that
+  having the code guarantees commissions, rewards or program eligibility.
+- With mocked HTTP requests, verify the exact default header, an override,
+  an explicitly empty value, and no header leakage to another origin.
+  Keep these tests separate from trial order execution.
+
+4. START AND VERIFY
+Start only after tests, account verification and required runtime checks
+pass. Use the platform's verified execution mechanism for the continuous
+risk monitor and save the daily scan schedule for 00:10 UTC. Confirm the
+actual schedule, timezone, environment, worker health and last successful
+update. Do not claim a service is running because its code was written.
+Start the monitor before one trial trading scan, then enable the daily
+schedule. Submit entries only when rules qualify; no signal is a valid
+no-trade result. Never force a demonstration trade. Keep the trading host
+in the agent's cloud environment and verify continued operation there.
+
+Return the checklist, tests, backtest and today's report, plus actual Propr
+order IDs and confirmed stop status for submitted orders. Distinguish
+"built and tested", "connected", "running and waiting for a signal" and
+"filled with protection confirmed". A no-fill run does not test execution
+end to end. Explain unverified recovery behavior. If a runtime requirement
+remains unverified, state the blocker and leave trading disabled.
+Notify me about errors, halts or required decisions; keep routine reports
+in reports/. Persist state so future Dot tasks can inspect and resume safely.
+```

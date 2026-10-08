@@ -1,8 +1,8 @@
-# Status: v0.2.0-beta.3
+# Status: v0.2.0-beta.4
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
 
-This release adds the private browser API-key form (`propfirm connect`) and cloud-browser handoff instructions. The trading engine and preserved original specification are unchanged. All 74 offline tests passed on October 8, 2026, including original-specification preservation. The landing-page copied prompt matches docs/START-PROMPT.md exactly.
+This release fixes the private API-key form rejecting private storage under empty Git placeholders in cloud workspaces. Populated Git markers and framework source directories remain excluded. The trading engine and preserved original specification are unchanged. All 76 offline tests passed on October 8, 2026, including original-specification preservation. The landing-page copied prompt matches docs/START-PROMPT.md exactly.
 
 ## Implemented and checked
 
@@ -21,6 +21,8 @@ The user's October 8 screenshot reports beta.2 installed, all 64 tests passed, b
 A later screenshot reports Dot found cloud-desktop takeover for hidden terminal key entry and observed a test worker surviving a worker turn ending and recovering from a deliberately crashed process. A subsequent screenshot reports the ten-minute probe passed across worker completion and wait/wake cycles, crash recovery took about one second, shutdown was clean, and twelve markets passed a 400-day history check. Cloud-host restart recovery remained untested. These are user-provided reports, not independently observed tests.
 
 Beta.3 adds a one-field browser form and tests its save path with synthetic credentials. Local desktop/mobile browser testing verifies form rendering, submission and private file storage. Dot cloud browser takeover and continued worker/recovery behavior still require the user's run; local form tests do not establish those cloud capabilities.
+
+Beta.4 addresses the next user-reported Dot failure: four form tests failed under empty Git markers in the cloud workspace. Regression tests now simulate nested empty markers through the actual HTTP save path, while confirming real repositories and symlink aliases remain excluded. This fix still needs confirmation in the user's Dot environment.
 
 ## What still needs the first real user run
 

@@ -2,7 +2,7 @@
 
 ```text
 Set up my own trading agent using the Prosperity Labs Agent Kit framework from
-https://github.com/worldclasstom/prop-firm-agent at v0.2.0-beta.3.
+https://github.com/worldclasstom/prop-firm-agent at v0.2.0-beta.4.
 Use your existing cloud computer. Do not ask me to rent a server or keep
 my laptop on. Read AGENTS.md, docs/SETUP.md and the full preserved
 specification in docs/SPECIFICATION.md. Follow every requirement there;

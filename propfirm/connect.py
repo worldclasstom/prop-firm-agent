@@ -9,6 +9,23 @@ import time
 from urllib.parse import parse_qs
 
 
+def has_repository_marker(directory):
+    """Ignore empty cloud-workspace placeholders; reject populated Git markers."""
+    marker = directory / '.git'
+    try:
+        if marker.is_dir():
+            return next(marker.iterdir(), None) is not None
+        if marker.is_file():
+            # A worktree .git file contains a gitdir pointer. Treat any populated
+            # marker conservatively, without following or executing its contents.
+            with marker.open('rb') as stream:
+                return bool(stream.read(4096).strip())
+        return False
+    except OSError:
+        # An unreadable marker must not turn a repository into allowed storage.
+        return True
+
+
 def save_key(root, key):
     key = key.strip()
     if not key or len(key) > 4096 or any(ord(c) < 33 or ord(c) > 126 for c in key):
@@ -16,7 +33,7 @@ def save_key(root, key):
     root = Path(root).resolve()
     checkout = Path(__file__).resolve().parents[1]
     if (root == checkout or checkout in root.parents or
-            any((parent / '.git').exists() or
+            any(has_repository_marker(parent) or
                 ((parent / 'pyproject.toml').exists() and (parent / 'propfirm').is_dir())
                 for parent in (root, *root.parents))):
         raise ValueError('Credential storage must be outside the source checkout.')

@@ -111,11 +111,40 @@ class ConnectTests(unittest.TestCase):
         for marker in ['.git', 'pyproject.toml']:
             checkout = self.root / marker.replace('.', '')
             checkout.mkdir()
-            (checkout / marker).touch()
+            (checkout / marker).write_text('gitdir: /private/worktree-metadata' if marker == '.git' else '')
             (checkout / 'propfirm').mkdir()
             with self.assertRaises(ValueError):
                 save_key(checkout / 'private', 'synthetic')
             self.assertFalse((checkout / 'private').exists())
+
+    def test_empty_cloud_git_markers_allow_private_form_save(self):
+        # Dot reported empty markers above its temporary/private directories.
+        # Exercise the real HTTP save path, not just the detector.
+        (self.root / '.git').mkdir()
+        workspace = self.root / 'workspace'
+        workspace.mkdir()
+        (workspace / '.git').write_text('')
+        self.server.root = workspace / 'private'
+        self.assertEqual(self.post()[0], 200)
+        self.assertEqual(load_key(self.server.root), 'synthetic_trial_key')
+        self.assertEqual((self.server.root / '.env').stat().st_mode & 0o777, 0o600)
+
+    def test_actual_repo_nested_below_empty_cloud_marker_still_rejected(self):
+        (self.root / '.git').mkdir()
+        repo = self.root / 'checkout'
+        (repo / '.git').mkdir(parents=True)
+        (repo / '.git' / 'HEAD').write_text('ref: refs/heads/main\n')
+        self.server.root = repo / 'private'
+        self.assertEqual(self.post()[0], 400)
+        self.assertFalse(self.server.root.exists())
+        # Resolve symlinks before assessing storage location.
+        alias = self.root / 'alias'
+        alias.symlink_to(repo, target_is_directory=True)
+        with self.assertRaises(ValueError):
+            save_key(alias / 'private', 'synthetic')
+        # A private sibling of the checkout is valid.
+        save_key(self.root / 'private-sibling', 'synthetic')
+        self.assertEqual(load_key(self.root / 'private-sibling'), 'synthetic')
 
     def test_cli_timeout_leaves_no_credentials(self):
         with contextlib.redirect_stdout(io.StringIO()):

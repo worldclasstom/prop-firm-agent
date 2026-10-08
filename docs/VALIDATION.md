@@ -35,3 +35,9 @@ The actual loopback form rendered at 1280×720 and 390×844. A synthetic test ke
 This establishes local form operation only. The fresh Dot run must still demonstrate same-cloud-host browser access, user takeover, authenticated trial checks and worker survival/recovery. It does not establish live trading or ongoing cloud execution.
 
 The beta.3 package was also installed into a fresh virtual environment and tested from outside the source checkout: all 74 tests passed. This caught and corrected credential-directory rejection after installation; Git checkouts and unpacked framework source directories are rejected independently of the installed package location.
+
+## 2026-10-08: empty cloud Git placeholders (beta.4)
+
+Dot reported four beta.3 form tests failed because empty `.git` markers above its private directories were treated as actual repositories. The guard now ignores empty directory/file placeholders while rejecting populated markers (including worktree pointer files), unpacked framework source directories and resolved symlinks into a repository. Unreadable markers remain rejected.
+
+Two regression scenarios exercise HTTP form saving under nested empty markers and rejection inside a real repository beneath an empty marker, including symlink aliases and a permitted private sibling. All 76 offline tests pass. No live account, trading or actual Dot form takeover is established by these tests.

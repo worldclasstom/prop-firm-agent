@@ -18,6 +18,9 @@ def main():
     init = sub.add_parser('init', help='Create private configuration outside the source checkout')
     init.add_argument('--directory', type=Path, default=root_dir())
     sub.add_parser('credentials', help='Save Propr key using hidden input, not a command argument')
+    connect = sub.add_parser('connect', help='Open a private API-key form in the cloud computer browser')
+    connect.add_argument('--port', type=int, default=0)
+    connect.add_argument('--timeout', type=int, default=600)
     inspect = sub.add_parser('inspect', help='Read account documents into private setup files; never trade')
     inspect.add_argument('--account-id', required=True)
     discover = sub.add_parser('markets', help='Read public Hyperliquid market metadata')
@@ -43,6 +46,9 @@ def main():
     sub.add_parser('check-update', help='Read available GitHub releases; never update a running worker')
     args = parser.parse_args()
     root = root_dir()
+    if args.command == 'connect':
+        from .connect import serve_connect
+        return serve_connect(root, args.port, args.timeout)
     if args.command == 'init':
         root = args.directory.expanduser().resolve()
         checkout = Path(__file__).resolve().parents[1]
@@ -58,16 +64,9 @@ def main():
             print('Created private configuration. Trading remains disabled until verification and trial approval.')
         return 0
     if args.command == 'credentials':
+        from .connect import save_key
         key = getpass.getpass('Propr API key (hidden): ').strip()
-        if not key:
-            raise ValueError('No key provided')
-        if any(c in key for c in '\r\n'):
-            raise ValueError('Invalid credential')
-        root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        fd = os.open(root / '.env', os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, 'w') as stream:
-            stream.write('PROPR_API_KEY=' + key + '\n')
-        (root / '.env').chmod(0o600)
+        save_key(root, key)
         print('Key saved privately. It was not sent to GitHub or written into a report.')
         return 0
     if args.command == 'doctor':

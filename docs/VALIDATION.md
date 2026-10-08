@@ -25,3 +25,13 @@ The full previous landing-page prompt matched the archive before the page was sh
 Still unverified: authenticated Propr account mapping, actual trial fills/stops, broker failure recovery, and background execution across Dot task/idle boundaries. These require a user's trial account and the intended cloud environment. Exact IOC fills and intraday event order cannot be inferred from daily bars; the backtest explicitly labels its approximations.
 
 A fresh clone of public GitHub commit `a1deea387913863c7b4431a6ea9cc7898b967bdd` installed successfully into a new virtual environment. Running from outside the checkout, all 64 tests passed on Python 3.14.7; initialization and the diagnostic CLI also worked. GitHub Actions passed the 3.11, 3.12 and 3.13 matrix: https://github.com/worldclasstom/prop-firm-agent/actions/runs/37704580663 . This final documentation commit does not change executable code.
+
+## 2026-10-08: private API-key form (beta.3)
+
+All 74 offline tests passed locally, including ten credential-form tests for successful saving, expiry, one-use submission, Host/Origin/CSRF checks, opaque embedded-browser origins, invalid/oversized input, private permissions, atomic symlink replacement and checkout exclusion. The original specification preservation test remains unchanged.
+
+The actual loopback form rendered at 1280×720 and 390×844. A synthetic test key was submitted using the Codex in-app browser; the success page appeared and the CLI exited successfully. No real key or Propr account was used. The test exposed an embedded-browser `Origin: null` submission; that path now additionally requires browser-generated `Sec-Fetch-Site: same-origin`, plus the existing unique route, exact Host and independent CSRF token.
+
+This establishes local form operation only. The fresh Dot run must still demonstrate same-cloud-host browser access, user takeover, authenticated trial checks and worker survival/recovery. It does not establish live trading or ongoing cloud execution.
+
+The beta.3 package was also installed into a fresh virtual environment and tested from outside the source checkout: all 74 tests passed. This caught and corrected credential-directory rejection after installation; Git checkouts and unpacked framework source directories are rejected independently of the installed package location.

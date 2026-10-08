@@ -2,14 +2,14 @@
 
 These instructions are for the AI agent doing the installation. The visitor gives you the starting prompt, chooses markets and supplies access to a Propr free trial. Install the shared framework and configure a private instance on your existing cloud VM. Handle the files, configuration and commands for them. Keep their API key, account ID, chosen markets, configuration, order history and reports in private storage on that VM, outside the source checkout. Never publish those files or send them to Prosperity Labs. Reuse the framework's execution and risk components rather than generating a separate engine for every user.
 
-The kit contains executable trading code. v0.2.0-beta.2 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
+The kit contains executable trading code. v0.2.0-beta.3 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
 
 ## 1. Install the shared release and run offline tests
 
 Use your existing cloud computer. Do not ask the visitor to buy hosting, configure SSH or keep their laptop on. If Dot delegates to Codex cloud, use a configured cloud environment for this repository. Guide only missing in-app setup and pass the repository and full instructions to the task.
 
 ```sh
-git clone --branch v0.2.0-beta.2 https://github.com/worldclasstom/prop-firm-agent.git
+git clone --branch v0.2.0-beta.3 https://github.com/worldclasstom/prop-firm-agent.git
 cd prop-firm-agent
 python3 -m venv .venv
 . .venv/bin/activate
@@ -27,7 +27,7 @@ Read [SPECIFICATION.md](SPECIFICATION.md). The original full build prompt is pre
 
 Ask the visitor which Propr markets they want. Use `propfirm markets` for native Hyperliquid perpetuals and `propfirm markets --dex xyz` for that builder's markets. Preserve exact identifiers such as `xyz:GOLD`; other namespaces must be verified against the provider's metadata.
 
-Use `examples/runtime.json` as a template in the private kit directory. Record observations for persistent storage, supported secret entry, outbound HTTPS to `api.propr.xyz` and `api.hyperliquid.xyz`, background Python execution, recovery across idle/task boundaries and the platform's process supervisor. Mark a check verified only after observing it. Include the actual cloud host identity in `host_identity` and set `PROPFIRM_HOST_ID` to that same value in the worker environment.
+Use `examples/runtime.json` as a template in the private kit directory. Record observations for persistent storage, supported secret entry, outbound HTTPS to `api.propr.xyz` and `api.hyperliquid.xyz`, background Python execution, recovery across idle/task boundaries and the platform's process supervisor. Actively investigate and configure supported alternatives when a default tool is missing; the absence of systemd alone does not establish that background work is unavailable. Preserve completed setup, and ask the visitor only for a concrete required action. Mark a check verified only after observing it. Include the actual cloud host identity in `host_identity` and set `PROPFIRM_HOST_ID` to that same value in the worker environment.
 
 `propfirm runtime-probe --seconds 600` writes a harmless heartbeat. Run it through the platform's supported background mechanism, end the initiating task where supported, then inspect whether timestamps continued. A probe completing while you watched it is not evidence of surviving task termination. Record the test interval and result, including any remaining uncertainty. Do not assume `nohup`, systemd or a Dot reminder is sufficient. The runtime evidence is checked at startup and must be less than seven days old. If the platform cannot support the worker, state the specific blocker and leave trading off.
 
@@ -39,7 +39,17 @@ First confirm whether the visitor already has a Propr account and has selected F
 
 Use an existing account when they have one. Do not ask for a duplicate account or a paid challenge. Their confirmation helps setup; it does not replace the API checks below that verify the selected account is a free trial before orders are allowed.
 
-After offline tests pass, ask for the API key and the explicit free-trial account ID. Prefer the platform's secret input and environment variable `PROPR_API_KEY`. Domain-scoped secret injection is supported by using the platform's documented mechanism; do not mistake a proxy placeholder for an invalid key. Alternatively, run `propfirm credentials` and provide the key through its hidden input. It saves a mode-0600 `.env` outside the checkout. Never put a key in a command argument, repository, report or issue.
+After offline tests pass, use the platform's native private credential form if it can supply `PROPR_API_KEY` to this worker. Otherwise use the kit's built-in form:
+
+```sh
+propfirm connect
+```
+
+Keep this command running in a tool session while the user completes the form. It prints a unique loopback URL and closes after one successful save or ten minutes. Open that URL using the browser on the **same cloud computer**. Verify the empty form loads, then present the platform's browser takeover/handoff so the visitor can paste their key and press **Save API key**. Tell them: “Paste your Propr API key into this form, save it, then return here.” Do not send a localhost link for them to open in their personal browser: that would point to their device, not the cloud computer. Do not expose the form using a public tunnel or deploy it to Prosperity Labs. If the platform browser is on a separate host, investigate its supported private credential delivery or same-host browser access; do not label the input solved until the user can actually access it.
+
+The form stores only the API key, as a mode-0600 `.env` outside the source checkout. It does not contact Propr or authorize trading. It has no analytics, external resources or request logs. Avoid taking screenshots or reading form values while the user enters a real key. Resume when it reports **API key saved**, and check the command's success without printing the key. An expired form can be reopened with the same command. Reuse a working saved credential instead of asking again. Hidden terminal input via `propfirm credentials` remains an alternative when the platform offers the user a private interactive terminal. A missing platform secrets widget alone is not a reason to stop before trying these supported inputs.
+
+Ask for the explicit free-trial account ID if it is not already known. Domain-scoped secret injection is supported through the platform's documented mechanism; do not mistake a proxy placeholder for an invalid key. Never put a key in a chat reply, command argument, repository, report or issue.
 
 ```sh
 propfirm inspect --account-id 'THE_SELECTED_ACCOUNT_ID'

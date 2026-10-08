@@ -2,7 +2,7 @@
 
 A shared framework for building your own Propr trading agent. Give your cloud agent the [setup prompt](docs/START-PROMPT.md); it installs the framework, asks which markets you want and configures your private trading instance on its own cloud VM.
 
-**Trial-testing beta: v0.2.0-beta.2.** This release contains order-execution code, protective stops, exits, risk monitoring and a daily scheduler. Automated tests use simulated API responses. Real Propr execution and Dot's background runtime still need an end-to-end acceptance test. The kit checks those prerequisites and reports blockers before it starts.
+**Trial-testing beta: v0.2.0-beta.3.** This release contains order-execution code, protective stops, exits, risk monitoring and a daily scheduler. Automated tests use simulated API responses. Real Propr execution and Dot's background runtime still need an end-to-end acceptance test. The kit checks those prerequisites and reports blockers before it starts.
 
 The [Agent Kit page](https://prosperitylabs.co/agent) contains the rules and starting prompt. This repository is the shared framework and update source. It supplies reusable strategy, order-execution and risk-management components, tests and setup instructions. Your AI configures those components for your own account; it does not need to rewrite the order engine.
 
@@ -10,7 +10,7 @@ Your API key, account ID, chosen markets, personal configuration, order history,
 
 ## Start here
 
-Copy [the setup prompt](docs/START-PROMPT.md) into Dot or another coding agent with a cloud computer. You choose markets and provide your free-trial account ID and API key when it asks. The agent follows [SETUP.md](docs/SETUP.md), runs the checks and starts the actual service when they pass. You do not need to choose a hosting provider.
+Copy [the setup prompt](docs/START-PROMPT.md) into Dot or another coding agent with a cloud computer. You choose markets and provide your free-trial account ID. The agent opens a private form where you paste your API key and click **Save API key**. The agent follows [SETUP.md](docs/SETUP.md), runs the checks and starts the actual service when they pass. You do not need to choose a hosting provider.
 
 The full original build prompt is preserved, unchanged, in [SPECIFICATION.md](docs/SPECIFICATION.md) and [original-build-prompt.txt](docs/original-build-prompt.txt). The [requirements map](docs/REQUIREMENTS.md) connects those instructions to the implementation and testing limits.
 

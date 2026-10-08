@@ -2,14 +2,14 @@
 
 These instructions are for the AI agent doing the installation. The visitor gives you the starting prompt, chooses markets and supplies access to a Propr free trial. Install the shared framework and configure a private instance on your existing cloud VM. Handle the files, configuration and commands for them. Keep their API key, account ID, chosen markets, configuration, order history and reports in private storage on that VM, outside the source checkout. Never publish those files or send them to Prosperity Labs. Reuse the framework's execution and risk components rather than generating a separate engine for every user.
 
-The kit contains executable trading code. v0.2.0-beta.4 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
+The kit contains executable trading code. v0.2.0-beta.5 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
 
 ## 1. Install the shared release and run offline tests
 
 Use your existing cloud computer. Do not ask the visitor to buy hosting, configure SSH or keep their laptop on. If Dot delegates to Codex cloud, use a configured cloud environment for this repository. Guide only missing in-app setup and pass the repository and full instructions to the task.
 
 ```sh
-git clone --branch v0.2.0-beta.4 https://github.com/worldclasstom/prop-firm-agent.git
+git clone --branch v0.2.0-beta.5 https://github.com/worldclasstom/prop-firm-agent.git
 cd prop-firm-agent
 python3 -m venv .venv
 . .venv/bin/activate
@@ -49,7 +49,21 @@ Keep this command running in a tool session while the user completes the form. I
 
 The form stores only the API key, as a mode-0600 `.env` outside the source checkout. It does not contact Propr or authorize trading. It has no analytics, external resources or request logs. Avoid taking screenshots or reading form values while the user enters a real key. Resume when it reports **API key saved**, and check the command's success without printing the key. An expired form can be reopened with the same command. Reuse a working saved credential instead of asking again. Hidden terminal input via `propfirm credentials` remains an alternative when the platform offers the user a private interactive terminal. A missing platform secrets widget alone is not a reason to stop before trying these supported inputs.
 
-Ask for the explicit free-trial account ID if it is not already known. Domain-scoped secret injection is supported through the platform's documented mechanism; do not mistake a proxy placeholder for an invalid key. Never put a key in a chat reply, command argument, repository, report or issue.
+After the form succeeds and the visitor returns control, resume setup by running the read-only discovery command with the saved key. Do not wait for them to find or type an account ID:
+
+```sh
+propfirm accounts
+```
+
+This follows every page of `/v1/challenge-attempts` and `/v1/challenges`, groups attempts by `accountId`, prints account choices and saves the exact response documents privately in `setup/account-discovery.json`. It does not select an account, change configuration or approvals, or place orders. These endpoints and `accountId` are documented in [Propr's official SDK](https://github.com/XBorgLabs/propr-docs/blob/main/python/propr_sdk.py). Do not use the SDK's automatic first-active-account selection.
+
+Present a short numbered list with the account ID, challenge name when returned, and attempt status. Inspect the private API documents for explicit account-type evidence; you may use `propfirm inspect` below to read a candidate's details before confirmation. Label an unestablished type **unverified**, never infer free trial from `active`, a name, a balance or list order. Ask “Which account would you like to use?” For a single candidate ask “Use this account?” The visitor can answer by number or name; bind their answer to the exact ID you displayed. Disambiguate repeated names. Reuse an already explicit account choice only if its ID matches a returned account. Discovery is not trading approval; complete trial proof and all existing checks below.
+
+If there are no accounts, help the visitor check key access and create/select **Free Trial** in Propr, then rerun discovery. Do not suggest buying a challenge. An authentication/network error is not an empty account list. If an attempt has no account ID or one account has multiple attempts, inspect the schema and resolve the ambiguity rather than guessing or dropping it silently. Paid and inactive accounts can appear in the list; they are not eligible for automatic trial startup.
+
+For multiple accounts, keep one explicitly selected account per private `PROPFIRM_HOME`, with separate configuration, approval, state, reports and supervisor identity. Never overwrite an existing instance to switch accounts or share its positions, halt flags or approval with another account. The agent creates and manages the separate directories; the visitor only chooses the account. Before activating another instance on an account, check existing managed workers to avoid duplicate traders. This command supports account discovery, not automatic portfolio-wide trading.
+
+Domain-scoped secret injection is supported through the platform's documented mechanism; do not mistake a proxy placeholder for an invalid key. Never put a key in a chat reply, command argument, repository, report or issue.
 
 ```sh
 propfirm inspect --account-id 'THE_SELECTED_ACCOUNT_ID'

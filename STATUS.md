@@ -1,8 +1,8 @@
-# Status: v0.2.0-beta.4
+# Status: v0.2.0-beta.5
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
 
-This release fixes the private API-key form rejecting private storage under empty Git placeholders in cloud workspaces. Populated Git markers and framework source directories remain excluded. The trading engine and preserved original specification are unchanged. All 76 offline tests passed on October 8, 2026, including original-specification preservation. The landing-page copied prompt matches docs/START-PROMPT.md exactly.
+This release adds read-only account discovery after API-key saving. The agent retrieves account IDs, presents choices and asks the user to confirm, rather than asking them to locate an ID manually. Discovery preserves existing configuration and does not approve or start trading. Multiple accounts remain separate private instances. The trading engine and preserved original specification are unchanged. All 84 offline tests passed locally, including preservation of the original specification. Validation results are recorded in docs/VALIDATION.md.
 
 ## Implemented and checked
 
@@ -26,7 +26,7 @@ Beta.4 addresses the next user-reported Dot failure: four form tests failed unde
 
 ## What still needs the first real user run
 
-1. A Propr API key and explicit free-trial account ID. Authenticated account fields must be inspected and mapped, including trial proof and the current day-start balance. Public docs do not fully specify them.
+1. An authenticated account-discovery run and user-confirmed free-trial account selection. Authenticated account fields must be inspected and mapped, including trial proof and the current day-start balance. Public docs do not fully specify them.
 2. The user's chosen markets, checked against that account's API/stop support and instrument metadata.
 3. Observed Dot/cloud support for persistent background execution across idle periods, task endings and supervisor restarts.
 4. A qualifying real Propr trial order, fill and confirmed protective stop, followed by recovery and stop-to-flat checks. No signal is valid but does not validate fills.

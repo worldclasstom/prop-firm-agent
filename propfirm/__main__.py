@@ -21,6 +21,7 @@ def main():
     connect = sub.add_parser('connect', help='Open a private API-key form in the cloud computer browser')
     connect.add_argument('--port', type=int, default=0)
     connect.add_argument('--timeout', type=int, default=600)
+    sub.add_parser('accounts', help='List Propr accounts for user selection; never select or trade')
     inspect = sub.add_parser('inspect', help='Read account documents into private setup files; never trade')
     inspect.add_argument('--account-id', required=True)
     discover = sub.add_parser('markets', help='Read public Hyperliquid market metadata')
@@ -121,6 +122,13 @@ def main():
             store.put('operator_stop', True)
             store.close()
         print('Shutdown requested. Run status and check Propr. This request alone does not confirm positions are closed.')
+        return 0
+    if args.command == 'accounts':
+        from .propr import ReadOnlyClient
+        from .discovery import discover_accounts
+        documents, summary = discover_accounts(ReadOnlyClient(load_key(root)))
+        save_json(root / 'setup' / 'account-discovery.json', documents)
+        print(json.dumps(summary, indent=2))
         return 0
     from .data import Data
     data = Data(root)

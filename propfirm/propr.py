@@ -41,25 +41,19 @@ class APIError(RuntimeError):
         super().__init__('Propr request failed' + (f' (HTTP {status})' if status else ' (network/timeout)'))
 
 
-class Client:
-    def __init__(self, api_key, account_id, builder_code=None, opener=None):
-        if not account_id:
-            raise ValueError('An explicit account ID is required')
+class ReadOnlyClient:
+    """Account discovery without selecting an account or permitting writes."""
+    def __init__(self, api_key, builder_code=None, opener=None):
         self.api_key = api_key
-        self.account_id = account_id
         self.builder_code = os.environ.get('PROPR_BUILDER_CODE', DEFAULT_BUILDER_CODE) if builder_code is None else builder_code
         self.opener = opener or build_opener(NoRedirects())
 
-    @property
-    def account_path(self):
-        return '/v1/accounts/' + quote(self.account_id, safe='')
-
     def request(self, method, path, payload=None, params=None):
-        if method not in ('GET', 'POST'):
-            raise ValueError('Unsupported method')
-        if method == 'POST' and not (path == self.account_path + '/orders' or
-                path.startswith(self.account_path + '/orders/') and path.endswith('/cancel')):
-            raise ValueError('Only order submission and cancellation are permitted writes')
+        if method != 'GET' or payload is not None:
+            raise ValueError('Account discovery permits reads only')
+        return self._request(method, path, params=params)
+
+    def _request(self, method, path, payload=None, params=None):
         req = read_request(path + ('?' + urlencode(params) if params else ''), self.api_key, self.builder_code)
         req.method = method
         req.add_header('User-Agent', 'ProsperityAgentKit/0.2.0')
@@ -99,14 +93,34 @@ class Client:
                 return result
         raise ValueError('Pagination did not terminate')
 
-    def account(self):
-        return self.request('GET', self.account_path)
-
     def attempts(self):
         return self.pages('/v1/challenge-attempts')
 
     def challenges(self):
         return self.pages('/v1/challenges')
+
+
+class Client(ReadOnlyClient):
+    def __init__(self, api_key, account_id, builder_code=None, opener=None):
+        if not account_id:
+            raise ValueError('An explicit account ID is required')
+        super().__init__(api_key, builder_code, opener)
+        self.account_id = account_id
+
+    @property
+    def account_path(self):
+        return '/v1/accounts/' + quote(self.account_id, safe='')
+
+    def request(self, method, path, payload=None, params=None):
+        if method not in ('GET', 'POST'):
+            raise ValueError('Unsupported method')
+        if method == 'POST' and not (path == self.account_path + '/orders' or
+                path.startswith(self.account_path + '/orders/') and path.endswith('/cancel')):
+            raise ValueError('Only order submission and cancellation are permitted writes')
+        return self._request(method, path, payload, params)
+
+    def account(self):
+        return self.request('GET', self.account_path)
 
     def orders(self):
         return self.pages(self.account_path + '/orders')

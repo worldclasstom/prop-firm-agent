@@ -1,10 +1,10 @@
 # Versions and updates
 
-Install an exact release. `v0.2.0-beta.4` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence.
+Install an exact release. `v0.2.0-beta.5` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence. Beta.5 adds `propfirm accounts`; reuse the saved API key, run discovery and confirm the account. It does not migrate or overwrite private configuration, approvals or trading state.
 
 ```sh
 propfirm check-update
-propfirm prepare-update --version v0.2.0-beta.4
+propfirm prepare-update --version v0.2.0-beta.5
 ```
 
 The first command reads releases and notes. The second clones the requested release into a separate directory under the private kit home, creates a virtual environment and runs the tests with isolated test state and no inherited API key. It never changes or restarts the running worker. A visitor normally uses this shared upstream; fork only when contributing a change.

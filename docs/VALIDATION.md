@@ -45,3 +45,11 @@ Two regression scenarios exercise HTTP form saving under nested empty markers an
 ### User-observed cloud form handoff
 
 The user then supplied screenshots showing Dot's cloud browser displaying Connect Propr, user takeover, masked key entry, the API key saved confirmation, and control returned to Dot. Dot reported 77 tests passed in its locally patched beta.3 installation. This establishes that the browser handoff and form submission reached success in that cloud run; it is not a test of the exact unmodified beta.4 release, API authentication, account verification or trading. The public beta.4 fix passed 76 tests locally and in GitHub Actions: https://github.com/worldclasstom/prop-firm-agent/actions/runs/37858926998 .
+
+## 2026-10-08: account discovery (beta.5)
+
+The official SDK documents paginated challenge attempts with `accountId`. The kit now offers `propfirm accounts` before an account is selected, using a read-only client and the saved key. It groups multiple attempts under each ID, preserves missing-ID warnings, retains all statuses and leaves trial classification unverified until explicit API evidence is inspected. Discovery does not alter selected configuration, approvals, state or orders.
+
+Eight new synthetic tests cover multiple pages/accounts, a single account requiring confirmation, empty results, duplicate/missing IDs, write/origin rejection, authentication failure, private CLI output/storage and malformed rows. All 84 offline tests passed both locally and from the installed beta.5 package in a fresh virtual environment outside the checkout. No real API key was used in this development run.
+
+Separately, user screenshots show Dot retrieving one account, reporting API type `paper`, asking for confirmation and receiving a yes. Dot then said it would verify the linked trial rules and market support. This is user-observed progress on its existing installation, not validation of the exact beta.5 release or completed trial eligibility, orders or stops. No private account IDs are included in this log.

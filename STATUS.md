@@ -22,7 +22,7 @@ A later screenshot reports Dot found cloud-desktop takeover for hidden terminal 
 
 Beta.3 adds a one-field browser form and tests its save path with synthetic credentials. Local desktop/mobile browser testing verifies form rendering, submission and private file storage. Dot cloud browser takeover and continued worker/recovery behavior still require the user's run; local form tests do not establish those cloud capabilities.
 
-Beta.4 addresses the next user-reported Dot failure: four form tests failed under empty Git markers in the cloud workspace. Regression tests now simulate nested empty markers through the actual HTTP save path, while confirming real repositories and symlink aliases remain excluded. This fix still needs confirmation in the user's Dot environment.
+Beta.4 addresses the next user-reported Dot failure: four form tests failed under empty Git markers in the cloud workspace. Regression tests now simulate nested empty markers through the actual HTTP save path, while confirming real repositories and symlink aliases remain excluded. The user subsequently supplied screenshots showing successful browser takeover, masked key entry, the API key saved screen, and control returned to Dot on its locally patched beta.3 installation (Dot reported 77 tests). That confirms the form/handoff path in the user's cloud run; the exact unmodified beta.4 release and authenticated account/trading checks still need acceptance.
 
 ## What still needs the first real user run
 

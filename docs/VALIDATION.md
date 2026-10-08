@@ -41,3 +41,7 @@ The beta.3 package was also installed into a fresh virtual environment and teste
 Dot reported four beta.3 form tests failed because empty `.git` markers above its private directories were treated as actual repositories. The guard now ignores empty directory/file placeholders while rejecting populated markers (including worktree pointer files), unpacked framework source directories and resolved symlinks into a repository. Unreadable markers remain rejected.
 
 Two regression scenarios exercise HTTP form saving under nested empty markers and rejection inside a real repository beneath an empty marker, including symlink aliases and a permitted private sibling. All 76 offline tests pass. No live account, trading or actual Dot form takeover is established by these tests.
+
+### User-observed cloud form handoff
+
+The user then supplied screenshots showing Dot's cloud browser displaying Connect Propr, user takeover, masked key entry, the API key saved confirmation, and control returned to Dot. Dot reported 77 tests passed in its locally patched beta.3 installation. This establishes that the browser handoff and form submission reached success in that cloud run; it is not a test of the exact unmodified beta.4 release, API authentication, account verification or trading. The public beta.4 fix passed 76 tests locally and in GitHub Actions: https://github.com/worldclasstom/prop-firm-agent/actions/runs/37858926998 .

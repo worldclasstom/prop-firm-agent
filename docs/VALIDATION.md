@@ -53,3 +53,9 @@ The official SDK documents paginated challenge attempts with `accountId`. The ki
 Eight new synthetic tests cover multiple pages/accounts, a single account requiring confirmation, empty results, duplicate/missing IDs, write/origin rejection, authentication failure, private CLI output/storage and malformed rows. All 84 offline tests passed both locally and from the installed beta.5 package in a fresh virtual environment outside the checkout. No real API key was used in this development run.
 
 Separately, user screenshots show Dot retrieving one account, reporting API type `paper`, asking for confirmation and receiving a yes. Dot then said it would verify the linked trial rules and market support. This is user-observed progress on its existing installation, not validation of the exact beta.5 release or completed trial eligibility, orders or stops. No private account IDs are included in this log.
+
+GitHub Actions also passed the Python 3.11, 3.12 and 3.13 jobs for beta.5: https://github.com/worldclasstom/prop-firm-agent/actions/runs/37859809911 . The Agent Kit page was deployed with the matching beta.5 prompt.
+
+### Authenticated setup follow-up (user-reported)
+
+A later screenshot reports Dot successfully read the selected account and matched its starting balance and 3% daily-loss / 6% static-drawdown / 10% target rules. It could not establish explicit free-trial mode, the UTC day-start balance or that balance's reference date from inspected responses. Its reported account type was `paper` and the linked challenge name was Free Trial, neither accepted as the required explicit trial mapping. Trading remains off. The public SDK/reference reviewed here does not define these three fields; the linked OpenAPI URL returned HTTP 403 from this development environment as well. Actual redacted response structure or authoritative provider semantics are needed before changing the adapter. This is not evidence that Propr cannot provide them.

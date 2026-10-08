@@ -31,4 +31,4 @@ Beta.4 addresses the next user-reported Dot failure: four form tests failed unde
 3. Observed Dot/cloud support for persistent background execution across idle periods, task endings and supervisor restarts.
 4. A qualifying real Propr trial order, fill and confirmed protective stop, followed by recovery and stop-to-flat checks. No signal is valid but does not validate fills.
 
-No Propr account has been connected in this development session. No actual order has been sent. Offline tests and public market-data checks do not establish strategy performance or guarantee challenge outcomes. See docs/VALIDATION.md and docs/REQUIREMENTS.md.
+The user now reports an authenticated connection in Dot, but trial-mode and daily-reference mappings remain unresolved (see docs/VALIDATION.md). No Propr account has been connected in this local development session. No actual order has been sent. Offline tests and public market-data checks do not establish strategy performance or guarantee challenge outcomes. See docs/VALIDATION.md and docs/REQUIREMENTS.md.

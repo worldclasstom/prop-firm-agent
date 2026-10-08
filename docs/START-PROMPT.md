@@ -1,14 +1,18 @@
 # Setup prompt
 
 ```text
-Install and run the Prosperity Labs Agent Kit from
+Set up my own trading agent using the Prosperity Labs Agent Kit framework from
 https://github.com/worldclasstom/prop-firm-agent at v0.2.0-beta.1.
 Use your existing cloud computer. Do not ask me to rent a server or keep
 my laptop on. Read AGENTS.md, docs/SETUP.md and the full preserved
 specification in docs/SPECIFICATION.md. Follow every requirement there;
 this shorter prompt does not replace or remove any trading or risk rule.
 
-Install the shared code, run its tests and check your cloud runtime.
+Install the shared framework, run its tests and check your cloud runtime.
+Reuse its execution and risk components. Configure my private instance on
+your cloud VM. Keep my API key, account ID, market choices, configuration,
+order history and reports there, outside the source checkout. Never publish
+my private files or send them to Prosperity Labs.
 Ask which Propr markets I want. After offline tests pass, ask for my
 free-trial account ID and API key using your supported credential input.
 Handle configuration and inspect the actual Propr response fields.

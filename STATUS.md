@@ -1,6 +1,8 @@
-# Status: v0.2.0-beta.1
+# Status: v0.2.0-beta.2
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
+
+This release updates account onboarding and the referral disclosure. The trading engine and preserved original specification are unchanged. All 64 offline tests passed on October 8, 2026, including original-specification preservation. The landing-page copied prompt matches docs/START-PROMPT.md exactly.
 
 ## Implemented and checked
 

@@ -18,7 +18,7 @@ This release adds the private browser API-key form (`propfirm connect`) and clou
 
 The user's October 8 screenshot reports beta.2 installed, all 64 tests passed, both APIs reachable, and 154 public non-FX market candidates. No authenticated account was connected and no trades were started. Dot reported unresolved credential input and persistent worker/recovery support; a 35-second heartbeat did not establish lifetime across task endings.
 
-A later screenshot reports Dot found cloud-desktop takeover for hidden terminal key entry and observed a test worker surviving a worker turn ending and recovering from a deliberately crashed process. The ten-minute probe and cloud-host stop/recovery were still unverified in that report; this is user-provided evidence, not an independently observed test.
+A later screenshot reports Dot found cloud-desktop takeover for hidden terminal key entry and observed a test worker surviving a worker turn ending and recovering from a deliberately crashed process. A subsequent screenshot reports the ten-minute probe passed across worker completion and wait/wake cycles, crash recovery took about one second, shutdown was clean, and twelve markets passed a 400-day history check. Cloud-host restart recovery remained untested. These are user-provided reports, not independently observed tests.
 
 Beta.3 adds a one-field browser form and tests its save path with synthetic credentials. Local desktop/mobile browser testing verifies form rendering, submission and private file storage. Dot cloud browser takeover and continued worker/recovery behavior still require the user's run; local form tests do not establish those cloud capabilities.
 

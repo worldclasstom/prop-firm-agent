@@ -2,6 +2,7 @@
 from decimal import Decimal as D
 from .data import DAY, strategy_bars, rounded_price
 from .strategy import atr, entry, exit_signal, quantity
+from .order_limits import quantity_floor, below_known_notional, unknown_minimums
 
 
 def simulate(histories, markets, initial=D(25000), fee=D('.00075'), slippage=D('.0005'), funding=D('.0001'), *, start_at=None):
@@ -76,8 +77,8 @@ def simulate(histories, markets, initial=D(25000), fee=D('.00075'), slippage=D('
                 if side=='long' and price <= 2*vol:
                     continue
                 gross = sum((abs(D(today[a][1]['o'])*p['size']*p['multiplier']) for a,p in positions.items()), D(0))
-                size = quantity(initial, equity('o'), gross, price, vol, D(market['multiplier']), D(market['quantity_step']), D(market['minimum_quantity']))
-                if not size or price*size*D(market['multiplier']) < D(market['minimum_notional']):
+                size = quantity(initial, equity('o'), gross, price, vol, D(market['multiplier']), D(market['quantity_step']), quantity_floor(market))
+                if not size or below_known_notional(market, price*size*D(market['multiplier'])):
                     continue
                 entry_fee = price*size*D(market['multiplier'])*entry_cost
                 balance -= entry_fee
@@ -107,7 +108,10 @@ def simulate(histories, markets, initial=D(25000), fee=D('.00075'), slippage=D('
             break
     wins=[D(t['pnl_after_costs']) for t in trades if D(t['pnl_after_costs'])>0]
     losses=[D(t['pnl_after_costs']) for t in trades if D(t['pnl_after_costs'])<=0]
+    unknown = unknown_minimums(markets.values())
     return {'curve':curve,'trades':trades,'entry_fills_proxy':fills,'closed_trades':len(trades),
+            'unverified_order_minimums': unknown,
+            'order_eligibility_limitation': 'Unknown broker minimums are not modeled; simulated fills may be rejected.' if unknown else None,
             'trades_per_market':{a:sum(t['asset']==a for t in trades) for a in markets},
             'win_rate':str(D(len(wins))/len(trades)) if trades else None,
             'average_win':str(sum(wins)/len(wins)) if wins else None,

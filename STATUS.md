@@ -1,6 +1,13 @@
-# Status: v0.2.0-beta.7
+# Status: v0.2.0-beta.8
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
+
+Beta.8 adds a trial-only broker-validation policy for unpublished order minimums.
+Unknown lower bounds stay explicit nulls with a source record. Risk ceilings,
+round-down sizing, confirmed protection and all other prerequisites remain in
+force. Rejections block entries without upsizing or blind retries. This is a
+client policy revision, not newly discovered broker limits. All 123 local tests
+pass; the path is not yet authenticated in Dot. See docs/ORDER-LIMITS.md.
 
 Beta.7 fixes research-window alignment: each scenario covers a full 90 UTC
 calendar days, retains earlier indicator history, and preserves the chosen
@@ -47,10 +54,11 @@ simulation's signal or risk logic; the user's data has not been rerun locally.
 
 Still required:
 
-1. Authoritative Propr minimum quantities (reported missing for 147 candidates)
-   and minimum notionals (reported missing for all 154). The public developer
-   reference lists seven minimum quantities, not a complete limits endpoint.
-   Availability/precision evidence alone does not establish order minimums.
+1. Configure and verify the trial-only broker-validation policy where lower
+   bounds remain unpublished (or retain strict verification). Record unknowns
+   honestly; do not require the user to contact support as the default setup
+   step. This exception does not establish availability, precision, stop support
+   or successful actual order acceptance.
 2. Resume account-market verification through permitted tools: the screenshots
    report 64 matches, one timeout and 89 unchecked after an approval-review
    cancellation. Preserve results and do not bypass a review decision.

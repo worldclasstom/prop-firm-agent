@@ -122,3 +122,27 @@ sections inspected. Its margin-config example is availability/leverage evidence.
 [tasks](https://learn.chatgpt.com/docs/dots/tasks-and-memory) describe cloud work
 and persistence, but do not establish arbitrary daemon autostart after host
 termination. Actual platform-supported lifecycle tests remain necessary.
+
+## 2026-10-08: self-service trial order-limit policy (beta.8)
+
+The user challenged making provider support a setup prerequisite. Code review
+confirmed that positive numeric lower bounds were required by our client even
+when Propr's published reference did not supply them. Beta.8 explicitly revises
+that client preflight policy; it does not claim to have discovered missing broker
+limits. Read ORDER-LIMITS.md for the distinction between known skip filters,
+unknown lower bounds, and unchanged risk/exposure caps.
+
+All 123 tests pass, including the installed package tested outside the source
+checkout on Python 3.14.7. Twelve new regressions cover explicit null/evidence
+requirements, strict/default and paid policy rejection, known minima, unchanged
+risk-sized payloads, rejected entry intents without retry/upsizing, returned
+rejected statuses, actual partial-fill stop quantity, shutdown after rejected
+protection, no probe orders without signals, and research disclosure. Existing
+failed-close, unknown-response reconciliation and strategy preservation tests
+also pass. Only synthetic API responses were used. Installed version: 0.2.0b8.
+
+Dot's beta.7 screenshot reports it is beginning the update/recovery checks; it
+does not report completion or a running trader. No real Propr order was submitted
+in this development session. Beta.8 still needs authenticated trial acceptance,
+and missing runtime evidence remains a separate prerequisite. No provider support
+message was sent.

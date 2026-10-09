@@ -1,11 +1,20 @@
 # Versions and updates
 
-Install an exact release. `v0.2.0-beta.7` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence. Beta.7 corrects research windows to use complete
-90-day calendar intervals and each market's actual history, and distinguishes an
-empty verified watchlist from duplicate identifiers. It does not resolve missing
-broker limits or cloud lifecycle evidence, and does not change live signals,
-orders or risk thresholds. Preserve beta.6 account bindings and completed checks;
-do not redo key entry or account selection.
+Install an exact release. `v0.2.0-beta.8` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence.
+
+Beta.8 adds an explicit trial-only policy for unpublished order minimums; it is
+not a claim that missing values equal zero. Read [ORDER-LIMITS.md](ORDER-LIMITS.md).
+Existing configurations keep the strict `verified` default. Setup can select
+`trial_broker_validation`, preserve known minimums, and explicitly record unknown
+ones as null with source evidence. All other instrument/account/runtime checks
+remain required. Paid accounts cannot select this policy. Entry rejection blocks
+further entries without upsizing or resubmitting the rejected entry intent;
+partial fills and failed protection retain the existing reconciliation/shutdown.
+The policy change affects the config digest and needs fresh trial verification
+and approval. No migration automatically changes private files or starts trading.
+
+Beta.7 corrected research calendar windows and empty-watchlist diagnostics.
+Preserve beta.6 account bindings, key, selected account and completed checks.
 
 Beta.6 added `daily-metrics`, ID-based active phase joins, linked trial-catalog
 verification, live Propr WebSocket marks for equity, and historical research
@@ -24,7 +33,7 @@ new Propr live-equity or catalog checks.
 
 ```sh
 propfirm check-update
-propfirm prepare-update --version v0.2.0-beta.7
+propfirm prepare-update --version v0.2.0-beta.8
 ```
 
 The first command reads releases and notes. The second clones the requested release into a separate directory under the private kit home, creates a virtual environment and runs the tests with isolated test state and no inherited API key. It never changes or restarts the running worker. A visitor normally uses this shared upstream; fork only when contributing a change.

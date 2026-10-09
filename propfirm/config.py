@@ -48,6 +48,11 @@ def digest(config):
 
 
 def validate_markets(config, *, trading=True):
+    policy = config.get('order_limits_policy', 'verified')
+    if policy not in ('verified', 'trial_broker_validation'):
+        raise ValueError('Unknown order limits policy')
+    if policy == 'trial_broker_validation' and config.get('account_mode', 'trial') != 'trial':
+        raise ValueError('Broker-validation policy is restricted to free-trial accounts')
     markets = config.get('markets', [])
     if not markets:
         raise ValueError('No verified markets configured. Complete instrument checks for the saved market selection; do not guess missing limits.')
@@ -57,6 +62,10 @@ def validate_markets(config, *, trading=True):
         if m['quote'] != 'USDC' or m.get('product_type') != 'perp':
             raise ValueError('This adapter supports verified USDC-settled linear perpetuals')
         for name in ('multiplier', 'quantity_step', 'minimum_quantity', 'minimum_notional'):
+            if m[name] is None and name in ('minimum_quantity', 'minimum_notional'):
+                if policy != 'trial_broker_validation' or not m.get('limits_evidence'):
+                    raise ValueError('Unknown minimum requires trial_broker_validation and a limits_evidence record')
+                continue
             n = D(m[name])
             if not n.is_finite() or n <= 0:
                 raise ValueError('Invalid market numeric metadata')

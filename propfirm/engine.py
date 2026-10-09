@@ -7,7 +7,8 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from decimal import Decimal as D
 from .account import select_documents, snapshot
-from .config import save_json
+from .config import save_json, validate_markets
+from .order_limits import quantity_floor, below_known_notional, unknown_minimums
 from .data import DAY, rounded_price, strategy_bars
 from .propr import APIError
 from .risk import RiskState, evaluate
@@ -27,6 +28,7 @@ def active(orders):
 
 class Engine:
     def __init__(self, client, data, config, root, sleeper=time.sleep, clock=None):
+        validate_markets(config)
         self.client, self.data, self.config, self.root = client, data, config, root
         self.store = Store(root / 'state.sqlite')
         self.lock = threading.RLock()
@@ -86,6 +88,8 @@ class Engine:
             raise ValueError('Duplicate server intents')
         if matches:
             return matches[0]
+        if not saved.get('reduceOnly') and self.store.get('rejected_intent:' + saved['intentId']):
+            raise ValueError('Entry intent was rejected; it will not be resubmitted')
         try:
             response = self.client.submit(saved)
             matches = [o for o in response.get('data', []) if o.get('intentId') == saved['intentId']]
@@ -96,6 +100,8 @@ class Engine:
             if error.status in (400, 401, 403, 404, 422):
                 self.store.put('rejected_intent:' + saved['intentId'], True)
                 self.store.put('entry_block', 'order_request_rejected')
+                self.report('order_request_rejected', asset=saved['asset'],
+                            intent_id=saved['intentId'], http_status=error.status)
                 raise ValueError('Order request rejected; review configuration before retry') from None
         # Unknown does not mean absent; leave the intent for recovery.
         self.store.put('entry_block', 'order_outcome_unknown')
@@ -320,9 +326,12 @@ class Engine:
                     self.report('entry_skipped', asset=asset, reason='stop_not_representable')
                     continue
                 size = quantity(snap.starting_balance, snap.equity, gross, price, volatility,
-                                D(market['multiplier']), D(market['quantity_step']), D(market['minimum_quantity']))
-                if size == 0 or size * price * D(market['multiplier']) < D(market['minimum_notional']):
+                                D(market['multiplier']), D(market['quantity_step']), quantity_floor(market))
+                if size == 0 or below_known_notional(market, size * price * D(market['multiplier'])):
                     continue
+                if unknown_minimums([market]):
+                    self.report('entry_limits_deferred_to_broker', asset=asset,
+                                unknown_fields=unknown_minimums([market])[asset], quantity=str(size))
                 self.store.put('entry_context:' + asset, {'atr': str(volatility), 'side': side, 'signal': rows[-1]['T']})
                 order_type = self.config.get('entry_order_type', 'limit')
                 payload = self.payload(market, side, size, order_type, **({'price': str(price)} if order_type == 'limit' else {}))
@@ -331,6 +340,9 @@ class Engine:
                     self.tick()  # Protect partial fills and check equity before waiting again.
                     matches = [o for o in self.client.orders() if o.get('intentId') == order['intentId']]
                     if matches and matches[0]['status'] in TERMINAL:
+                        if matches[0]['status'] == 'rejected':
+                            self.store.put('entry_block', 'order_request_rejected')
+                            self.report('entry_rejected', asset=asset, order_id=matches[0]['orderId'])
                         break
                     self.sleep(.25)
                 else:
@@ -346,6 +358,8 @@ class Engine:
         trades = self.client.pages(self.client.account_path + '/trades')
         day = self.clock().date().isoformat()
         summary = {'account_id': self.client.account_id, 'account_type': 'verified_' + self.config.get('account_mode', 'trial'),
+                   'order_limits_policy': self.config.get('order_limits_policy', 'verified'),
+                   'unverified_order_minimums': unknown_minimums(self.config['markets']),
                    'status': self.store.get('heartbeat'), 'kill': self.store.kill_reason(),
                    'entry_block': self.store.get('entry_block'), 'daily_halt': self.store.get('daily_halt_date'),
                    'positions': positions, 'orders': orders,
@@ -357,6 +371,10 @@ class Engine:
                  '## Activity', '', f'{len(positions)} open positions. See the adjacent JSON and event log for signals, orders, fills and reasons.', '',
                  'Daily halt: ' + str(summary['daily_halt']), 'Entry block: ' + str(summary['entry_block']),
                  'Kill latch: ' + str(summary['kill'])]
+        if summary['unverified_order_minimums']:
+            lines += ['', 'Broker order minimums remain unknown for: ' +
+                      ', '.join(sorted(summary['unverified_order_minimums'])) +
+                      '. Qualifying orders may be rejected; order sizes are never increased to satisfy a minimum.']
         heartbeat = summary['status'] or {}
         if heartbeat:
             eq = D(heartbeat['equity'])

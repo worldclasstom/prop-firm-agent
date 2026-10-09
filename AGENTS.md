@@ -12,4 +12,6 @@ Do not start paid-account trading without separate explicit user authorization a
 
 Run the documented checks and update STATUS.md with observed results and remaining gaps. Pin releases; do not silently update a running trader. Keep credentials and operational state outside the source checkout.
 
+For unpublished order minimums, follow the explicit trial-only preflight revision in docs/ORDER-LIMITS.md and SETUP.md. Do not invent minimums or require the visitor to contact support as the default path. This policy leaves unknown lower bounds explicit, preserves risk ceilings and all other checks, and is unavailable to paid accounts. Keep the archived specification unchanged; document policy revisions separately.
+
 Future strategy work must follow docs/STRATEGIES.md. The current daily breakout strategy is the first implementation, not a universal framework restriction. Keep additional strategy specifications separate from the immutable original; do not silently relax its history or trading rules. Do not claim strategy selection or shared-account multi-strategy support before its acceptance criteria pass.

@@ -47,3 +47,13 @@ Install the tagged release from GitHub using the page's exact setup prompt. Reco
 On October 8, 2026, the user requested support for future strategies with their own data/timeframe requirements. This is separate from the preserved original system and does not authorize weakening its 60-daily-bar requirement. See [STRATEGIES.md](STRATEGIES.md) for the current coupling, intended module boundaries, multi-account/shared-account distinctions and acceptance criteria. Strategy selection is planned, not implemented in the current beta.
 
 The user also requested an onboarding path to describe, import or build a private custom strategy after account connection. The agent must clarify and confirm rules, implement and test a local extension, and use shared account risk/execution. Strategy source, parameters and results stay on the user's VM; public sharing is a separate explicit action. The authoring workflow and acceptance requirements are in STRATEGIES.md; this remains planned functionality.
+
+## Trial order-limit policy revision (October 8)
+
+The user asked for self-service setup without a required provider-support exchange.
+Beta.8 explicitly separates unknown lower-bound order filters from verified risk
+ceilings and contract/precision/stop checks. The trial-only broker-validation
+policy is documented in [ORDER-LIMITS.md](ORDER-LIMITS.md); it never claims unknown
+minima are verified or changes the archived original. Paid/default strict mode
+still requires known minima. Actual Propr execution and cloud recovery remain
+outstanding acceptance checks.

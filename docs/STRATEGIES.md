@@ -65,8 +65,10 @@ imply a guaranteed return, challenge pass or validated superiority. The user can
 choose by number or name; the agent handles the module ID/version and private
 configuration. Keep the first menu compact, with details available on request.
 
-Offer only implemented, tested modules as selectable choices. Research ideas or
-unsupported custom strategies must not appear as ready-to-run options. While the
+Offer only implemented, tested modules as ready-to-run choices. A separate
+**Build or import my own strategy** option enters the authoring workflow below;
+it must not imply immediate trading readiness. Research ideas or unvalidated
+custom strategies must not appear as ready-to-run options. While the
 kit has only the default daily strategy, explain that plainly instead of showing
 a fictitious multi-strategy menu. This section defines future onboarding; it does
 not change the current beta's setup order or add runtime strategy support.
@@ -74,6 +76,46 @@ not change the current beta's setup order or add runtime strategy support.
 When resuming setup, reuse the confirmed account and strategy rather than asking
 again. For another account, ask whether to reuse the strategy preference, then
 validate it against that account and create an independent private instance.
+
+## Private custom strategies
+
+The user may describe a strategy in plain language, supply rules/documents, or
+import existing code into their own setup. This is an explicitly supported product
+direction, not implemented in the current beta. The agent should handle the work:
+
+1. Clarify ambiguous entries, exits, timeframe, data requirements, position sizing,
+   stop behavior, sessions and universe. Explain conflicts with account rules and
+   ask for the missing decision rather than inventing it.
+2. Present a short exact rule summary for user confirmation. Distinguish authoring
+   permission from activation of a validated account configuration.
+3. Implement a versioned local module against the same strategy interface used by
+   bundled strategies. Reuse shared execution and account-wide risk controls;
+   custom code must not need broker credentials or implement an independent order
+   path. A Python interface alone is not a security sandbox: review imported code
+   and its dependencies before execution; isolate its data access where supported.
+4. Test signal boundaries, lookahead, state/restart behavior, proposed stops and risk
+   rejection. Backtest with the declared interval and explicit costs, disclosing
+   insufficient research history and limitations. Use the same functions in live
+   operation and backtests. Test success is not evidence of profitability.
+5. Show results and remaining issues, then let the user choose whether to activate
+   on a verified trial account through the existing approval path. Failed checks
+   leave it in authoring/testing; no automatic fallback or forced demo order.
+
+Keep the strategy description, source, tests, parameters and research reports in
+a private extension directory outside the shared framework checkout, on the
+user's agent VM. Version and back up these files there. Pin the framework interface
+version and preserve private modules during upgrades; surface incompatibilities
+instead of overwriting or silently rewriting a custom strategy. Do not insert a
+user's strategy into the public repository, telemetry or maintainer diagnostics.
+
+"Share my strategy" is a separate, optional action requiring an explicit request
+and a reviewable export. Export only the approved strategy material after removing
+account identifiers, credentials, private state and unwanted results. Sharing is
+never required for installing, operating or updating a private strategy.
+
+Before exposing this authoring option in production, implement the extension
+loader and isolation/review workflow, test preservation across updates, and verify
+an end-to-end custom-module setup. Documentation alone does not enable it.
 
 ## Multiple strategies and accounts
 

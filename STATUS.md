@@ -11,9 +11,22 @@ rules, thresholds and shutdown protocol are the unchanged shared Engine. Twelve
 new synthetic tests cover scan timing, idempotence, resumption, stop requests,
 breaches between ticks, disclosed gaps, failures, model mixing and evidence.
 All 139 local tests pass. A private GitHub repository template
-(examples/scheduled-agent) is the reference runtime. No check run from a real
-scheduler, no live order and no Propr acceptance of runner addresses has been
+(examples/scheduled-agent) is the reference runtime. No live order has been
 observed; the continuous model and its outstanding items below are unchanged.
+
+Runner observation, 2026-10-09: a credential-free probe workflow
+(`.github/workflows/probe.yml`, also a job of the push checks) ran on a
+GitHub-hosted runner (Azure centralus, egress 132.196.30.209) and reached
+`https://api.propr.xyz/v1/health` and `/v1/health/services` with HTTP 200 and
+Hyperliquid's public metadata with HTTP 200. So GitHub-hosted runners are not
+blocked by address for public reads. The same run showed that Propr's edge
+answers urllib's default agent string (`Python-urllib/3.x`) with HTTP 403 while
+curl and a product agent string get 200; the standalone diagnostic
+`scripts/runtime_network_probe.py` sent the default agent and therefore reported
+403, which is the unexplained "Propr health HTTP 403" recorded below. The kit's
+HTTP clients already send `ProsperityAgentKit/0.2.0` and were never subject to
+that rule; the diagnostic now sends a product agent too. Authenticated reads,
+the mark stream and an order from a runner remain unobserved.
 
 Beta.8 adds a trial-only broker-validation policy for unpublished order minimums.
 Unknown lower bounds stay explicit nulls with a source record. Risk ceilings,

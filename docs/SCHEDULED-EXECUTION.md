@@ -87,8 +87,12 @@ server, is owned by the user, and keeps Prosperity Labs out of key custody.
 Two platform properties are documented facts that the setup agent must
 disclose: GitHub can delay cron runs under load, and it disables scheduled
 workflows on repositories with no activity for 60 days, which the state commits
-avoid. Whether Propr accepts requests from GitHub-hosted runner addresses is
-not yet observed; the template's check run establishes it before approval.
+avoid. Propr's public health endpoints and Hyperliquid's public metadata were
+reached from a GitHub-hosted runner (Azure, 132.196.30.209) on 2026-10-09 with
+HTTP 200, by the workflow `.github/workflows/probe.yml`; see STATUS.md. That
+observation covers unauthenticated reads from one runner address. The
+template's check run still establishes the authenticated path for each
+private repository before approval.
 
 Any other scheduler that can run a command on a cadence with a persistent
 directory and a private secret also qualifies, including an AI tool's scheduled

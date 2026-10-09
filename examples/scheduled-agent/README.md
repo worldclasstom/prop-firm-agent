@@ -49,5 +49,6 @@ account and pastes their key into GitHub.
 
 GitHub may delay scheduled runs under load; the tick records gaps. GitHub
 disables schedules on repositories without activity for 60 days; the state
-commits count as activity. Whether Propr accepts requests from GitHub-hosted
-runners is established by the check run, not assumed.
+commits count as activity. Public reads of both APIs from a GitHub-hosted
+runner were observed on 2026-10-09 (STATUS.md); the check run still
+establishes the authenticated path for your repository before approval.

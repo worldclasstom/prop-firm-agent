@@ -49,10 +49,16 @@ def probe():
                  'SSL_CERT_FILE', 'SSL_CERT_DIR', 'REQUESTS_CA_BUNDLE')
     proxies = getproxies()
     opener = build_opener(NoRedirects())
+    # Propr's edge answers urllib's default agent string with HTTP 403 while the
+    # same request with a product agent string gets 200 (observed 2026-10-09 from
+    # a GitHub-hosted runner and from another cloud host). The kit's clients
+    # already send a product agent; the diagnostic must send one too, or it
+    # reports a block that the trading path does not experience.
+    agent = {'User-Agent': 'ProsperityAgentKit-probe/0.2.0'}
     requests = {
-        'propr_public_health': Request('https://api.propr.xyz/v1/health'),
+        'propr_public_health': Request('https://api.propr.xyz/v1/health', headers=agent),
         'hyperliquid_public_metadata': Request('https://api.hyperliquid.xyz/info',
-            data=b'{"type":"meta"}', headers={'Content-Type': 'application/json'}, method='POST'),
+            data=b'{"type":"meta"}', headers={'Content-Type': 'application/json', **agent}, method='POST'),
     }
     return {
         'at_epoch': time.time(), 'pid': os.getpid(), 'parent_pid': os.getppid(),

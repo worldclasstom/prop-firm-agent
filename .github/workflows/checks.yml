@@ -18,3 +18,28 @@ jobs:
       - run: python -m pip install .
       - run: python -m unittest discover -s tests -v
       - run: propfirm doctor
+  # Credential-free probe of the GitHub-hosted runner's path to Propr and
+  # Hyperliquid (docs/SCHEDULED-EXECUTION.md records this as not yet observed).
+  # Public reads only: no key, no account, no order.
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet .
+      - name: Runner egress address
+        run: curl -sS --max-time 15 https://api.ipify.org || true
+      - name: Propr public health from the runner
+        run: |
+          curl -sS --max-time 20 -o /dev/null -w 'health HTTP %{http_code} in %{time_total}s\n' https://api.propr.xyz/v1/health
+          curl -sS --max-time 20 https://api.propr.xyz/v1/health | head -c 300; echo
+          curl -sS --max-time 20 -o /dev/null -w 'services HTTP %{http_code}\n' https://api.propr.xyz/v1/health/services
+      - name: Hyperliquid public info from the runner
+        run: curl -sS --max-time 20 -o /dev/null -w 'HTTP %{http_code} in %{time_total}s\n' -X POST -H 'content-type: application/json' -d '{"type":"meta"}' https://api.hyperliquid.xyz/info
+      - name: Kit public market metadata
+        run: propfirm markets | head -c 600; echo
+      - name: Repository probe script
+        run: python scripts/runtime_network_probe.py

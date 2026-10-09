@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "prosperity-prop-firm-agent"
-version = "0.2.0b8"
+version = "0.2.0b9"
 description = "Prosperity Labs Propr agent development kit"
 requires-python = ">=3.11"
 dependencies = ["websockets==17.1"]

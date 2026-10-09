@@ -105,13 +105,32 @@ def validate(config):
         raise ValueError('entry_order_type must be limit or market')
     if config.get('account_mode', 'trial') not in ('trial', 'paid'):
         raise ValueError('Account mode must be trial or paid')
+    validate_execution_model(config)
     validate_markets(config)
     if not config.get('account_mapping') or not config.get('mapping_evidence'):
         raise ValueError('Map actual Propr response fields using propfirm inspect and SETUP.md')
     return config
 
 
+EXECUTION_MODELS = ('continuous', 'scheduled')
+MIN_TICK_MINUTES, MAX_TICK_MINUTES = 5, 240
+
+
+def validate_execution_model(config):
+    """Scheduled execution is an explicit, documented revision; see docs/SCHEDULED-EXECUTION.md."""
+    model = config.get('execution_model', 'continuous')
+    if model not in EXECUTION_MODELS:
+        raise ValueError('execution_model must be continuous or scheduled')
+    if model == 'scheduled':
+        interval = config.get('tick_interval_minutes')
+        if not isinstance(interval, int) or isinstance(interval, bool) or not MIN_TICK_MINUTES <= interval <= MAX_TICK_MINUTES:
+            raise ValueError('Scheduled execution needs tick_interval_minutes between %d and %d' % (MIN_TICK_MINUTES, MAX_TICK_MINUTES))
+    return model
+
+
 def runtime_ready(root, config):
+    if validate_execution_model(config) == 'scheduled':
+        return scheduled_runtime_ready(root, config)
     evidence = read_json(root / 'runtime.json')
     if evidence.get('config_sha256') != digest(config):
         raise ValueError('Runtime evidence does not match this configuration')
@@ -126,4 +145,28 @@ def runtime_ready(root, config):
     age = (datetime.now(timezone.utc) - checked).total_seconds()
     if age < 0 or age > 7 * 86400:
         raise ValueError('Refresh cloud-runtime evidence (maximum age seven days at startup)')
+    return evidence
+
+
+def scheduled_runtime_ready(root, config):
+    """Evidence for the scheduled model: which scheduler runs the tick and that it can reach the APIs.
+
+    There is no host identity, supervisor or idle-recovery check: every tick is a fresh process.
+    Observed cadence gaps are recorded by the tick itself in status.json and the event log.
+    """
+    evidence = read_json(root / 'runtime.json')
+    if evidence.get('execution_model') != 'scheduled':
+        raise ValueError('Runtime evidence must declare execution_model scheduled')
+    if evidence.get('config_sha256') != digest(config):
+        raise ValueError('Runtime evidence does not match this configuration')
+    for key in ('scheduler', 'network_access', 'persistent_state', 'private_secrets'):
+        check = evidence.get(key, {})
+        if check.get('verified') is not True or not check.get('observation'):
+            raise ValueError('Runtime requirement unverified: ' + key)
+    declared = evidence.get('scheduled_interval_minutes')
+    if declared != config['tick_interval_minutes']:
+        raise ValueError('Declared scheduler interval must equal tick_interval_minutes')
+    checked = datetime.fromisoformat(evidence['checked_at'].replace('Z', '+00:00'))
+    if (datetime.now(timezone.utc) - checked).total_seconds() < 0:
+        raise ValueError('Runtime evidence timestamp is in the future')
     return evidence

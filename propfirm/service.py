@@ -25,11 +25,19 @@ def exclusive(root):
         os.close(fd)
 
 
-def serve(engine):
-    root, config = engine.root, engine.config
+def check_approval(root, config):
+    """The approval binds the exact config digest, release and account mode; any change needs a fresh approval."""
     approval = read_json(root / 'approval.json')
     if approval.get('config_sha256') != digest(config) or approval.get('trading_authorized') is not True or approval.get('version') != __version__ or approval.get('account_mode') != config.get('account_mode', 'trial'):
         raise ValueError('Approve this verified account configuration before start')
+    return approval
+
+
+def serve(engine):
+    root, config = engine.root, engine.config
+    if config.get('execution_model', 'continuous') != 'continuous':
+        raise ValueError('This configuration uses scheduled execution; run propfirm tick from the scheduler instead of start')
+    check_approval(root, config)
     runtime_error = None
     try:
         runtime_ready(root, config)

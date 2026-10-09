@@ -2,7 +2,7 @@
 
 A shared framework for building your own Propr trading agent. Give your cloud agent the [setup prompt](docs/START-PROMPT.md); it installs the framework, asks which markets you want and configures your private trading instance on its own cloud VM.
 
-**Trial-testing beta: v0.2.0-beta.8.** This release contains order-execution code, protective stops, exits, risk monitoring and a daily scheduler. Automated tests use simulated API responses. Real Propr execution and Dot's background runtime still need an end-to-end acceptance test. The kit checks those prerequisites and reports blockers before it starts.
+**Trial-testing beta: v0.2.0-beta.9.** This release contains order-execution code, protective stops, exits, risk monitoring, a daily scheduler and a scheduled execution model. Automated tests use simulated API responses. Real Propr execution and Dot's background runtime still need an end-to-end acceptance test. The kit checks those prerequisites and reports blockers before it starts.
 
 The [Agent Kit page](https://prosperitylabs.co/agent) contains the rules and starting prompt. This repository is the shared framework and update source. It supplies reusable strategy, order-execution and risk-management components, tests and setup instructions. Your AI configures those components for your own account; it does not need to rewrite the order engine.
 
@@ -24,6 +24,10 @@ The full original build prompt is preserved, unchanged, in [SPECIFICATION.md](do
 - Stores reports and account state outside the source checkout.
 
 Passing a challenge is an aim, not a result established by this kit. Read [STATUS.md](STATUS.md) and [VALIDATION.md](docs/VALIDATION.md) for exactly what has been tested.
+
+## Scheduled execution (draft revision)
+
+Beta.9 adds `propfirm tick`: one idempotent run per scheduler invocation that reconciles, confirms every position's resting stop at Propr, scans once per UTC date at/after 00:10, reports and exits. It removes the need for a persistent worker inside an AI tool's cloud computer. The documented revision, the accepted risk and the private GitHub repository template are in [SCHEDULED-EXECUTION.md](docs/SCHEDULED-EXECUTION.md), [examples/scheduled-agent](examples/scheduled-agent) and the draft [scheduled setup prompt](docs/START-PROMPT-SCHEDULED.md). It is tested with synthetic API fixtures only; no live acceptance run exists yet.
 
 ## Additional strategies
 

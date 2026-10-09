@@ -1,6 +1,6 @@
 # Versions and updates
 
-Install an exact release. `v0.2.0-beta.8` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence.
+Install an exact release. `v0.2.0-beta.9` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence.
 
 Beta.8 adds an explicit trial-only policy for unpublished order minimums; it is
 not a claim that missing values equal zero. Read [ORDER-LIMITS.md](ORDER-LIMITS.md).
@@ -33,7 +33,7 @@ new Propr live-equity or catalog checks.
 
 ```sh
 propfirm check-update
-propfirm prepare-update --version v0.2.0-beta.8
+propfirm prepare-update --version v0.2.0-beta.9
 ```
 
 The first command reads releases and notes. The second clones the requested release into a separate directory under the private kit home, creates a virtual environment and runs the tests with isolated test state and no inherited API key. It never changes or restarts the running worker. A visitor normally uses this shared upstream; fork only when contributing a change.

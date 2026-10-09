@@ -37,7 +37,8 @@ def main():
     reset = sub.add_parser('reset-halt', help='Explicit manual reset, only after verified flat')
     reset.add_argument('--account-id', required=True)
     reset.add_argument('--confirm-flat', action='store_true', required=True)
-    sub.add_parser('start', help='Run the daily trading service and risk monitor in the foreground')
+    sub.add_parser('start', help='Run the continuous daily trading service and risk monitor in the foreground')
+    sub.add_parser('tick', help='Scheduled execution: reconcile, confirm stops, scan if due, report, exit')
     sub.add_parser('status', help='Show worker status, with heartbeat freshness')
     sub.add_parser('stop', help='Request verified-flat shutdown from the running worker')
     sub.add_parser('resume-entries', help='Clear an entry block only after account/order reconciliation')
@@ -85,7 +86,10 @@ def main():
                 blockers.append('Cloud runtime evidence is incomplete, stale or belongs to another host/config')
         print(json.dumps({'version': __version__, 'python': sys.version.split()[0],
             'execution_implemented': True, 'ready_to_verify': not blockers, 'trading_available': False, 'blockers': blockers,
-            'runtime': {key: 'unverified' for key in ('persistent_storage_after_task_end', 'background_execution')}
+            'execution_model': (config or {}).get('execution_model', 'continuous'),
+            'runtime': {key: 'unverified' for key in (('scheduler', 'persistent_state', 'network_access')
+                        if (config or {}).get('execution_model') == 'scheduled'
+                        else ('persistent_storage_after_task_end', 'background_execution'))}
             if blockers else {'evidence': 'recorded; run verify for fresh account checks'},
             'next': 'Follow docs/SETUP.md. doctor does not start trading.'}, indent=2))
         return 0
@@ -111,7 +115,12 @@ def main():
     if args.command == 'status':
         value = read_json(root / 'status.json')
         timestamp = datetime.fromisoformat(value['at'])
-        value['worker_status_stale'] = (datetime.now(timezone.utc)-timestamp).total_seconds() > 30
+        age = (datetime.now(timezone.utc)-timestamp).total_seconds()
+        if value.get('execution_model') == 'scheduled':
+            # A scheduled tick is stale when the scheduler has missed two declared intervals.
+            value['tick_overdue'] = age > 2 * 60 * value['tick_interval_minutes']
+        else:
+            value['worker_status_stale'] = age > 30
         print(json.dumps(value, indent=2))
         return 0
     if args.command == 'stop':
@@ -217,7 +226,11 @@ def main():
                 raise ValueError('First activation requires an empty dedicated trial account')
             save_json(root / 'approval.json', {'account_id': config['account_id'], 'config_sha256': digest(config),
                       'trading_authorized': True, 'account_mode': expected_mode, 'version': __version__, 'at': datetime.now(timezone.utc).isoformat()})
-            print('Verified ' + expected_mode + ' account approved. Start through the verified cloud supervisor.')
+            if config.get('execution_model', 'continuous') == 'scheduled':
+                print('Verified ' + expected_mode + ' account approved for scheduled execution. Schedule propfirm tick every '
+                      + str(config['tick_interval_minutes']) + ' minutes; see docs/SCHEDULED-EXECUTION.md.')
+            else:
+                print('Verified ' + expected_mode + ' account approved. Start through the verified cloud supervisor.')
         else:
             print(json.dumps({'account_id': config['account_id'], 'type': 'verified_' + config.get('account_mode', 'trial'),
                               'starting_balance': str(snap.starting_balance), 'markets': len(config['markets'])}))
@@ -251,6 +264,11 @@ def main():
                 engine.store.put('entry_block', None)
             print('Entry block cleared after reconciliation. Existing daily halt still applies.')
             return 0
+        if args.command == 'tick':
+            from .scheduled import run_tick
+            code = run_tick(engine)
+            print(json.dumps(read_json(root / 'status.json'), indent=2))
+            return code
         serve(engine)
         return 0
     finally:

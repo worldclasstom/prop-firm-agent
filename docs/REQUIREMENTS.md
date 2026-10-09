@@ -48,6 +48,20 @@ On October 8, 2026, the user requested support for future strategies with their 
 
 The user also requested an onboarding path to describe, import or build a private custom strategy after account connection. The agent must clarify and confirm rules, implement and test a local extension, and use shared account risk/execution. Strategy source, parameters and results stay on the user's VM; public sharing is a separate explicit action. The authoring workflow and acceptance requirements are in STRATEGIES.md; this remains planned functionality.
 
+## Scheduled execution revision (October 9, draft)
+
+The user asked for a setup that works by pasting one prompt into an AI tool,
+with no server and no laptop. The continuous-worker rows above (existing cloud
+computer, background execution, idle recovery, supervisor, five-second monitor)
+are revised for configurations with `execution_model: "scheduled"` by
+[SCHEDULED-EXECUTION.md](SCHEDULED-EXECUTION.md): `propfirm tick` in
+`scheduled.py` performs reconciliation, stop confirmation, the 00:10 UTC scan,
+reports and exit on every scheduler run; `config.scheduled_runtime_ready` replaces
+the host evidence; `examples/scheduled-agent` is the reference runtime. Every
+other row is unchanged. Remaining acceptance: a read-only check run from the
+actual scheduler, Propr acceptance of its addresses, and a first real signal,
+fill and stop confirmation from a scheduled tick.
+
 ## Trial order-limit policy revision (October 8)
 
 The user asked for self-service setup without a required provider-support exchange.

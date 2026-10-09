@@ -42,6 +42,39 @@ history requirement does not establish that it is suitable or profitable. Choosi
 an eligible strategy must remain an explicit user decision, not an automatic
 reaction to a market failing another strategy's checks.
 
+## Onboarding experience
+
+The user requested strategy choice after a successful account connection. When
+strategy selection is implemented, use this sequence:
+
+1. Install and run offline checks; present the private API-key form.
+2. Confirm successful authentication, retrieve accounts and have the user choose
+   the account. Distinguish a working connection from completed trial/risk checks.
+3. Present a short numbered menu of implemented strategy modules compatible with
+   known account capabilities. If compatibility is still unverified, label it;
+   selecting a strategy does not authorize trading or bypass those checks.
+4. Ask which compatible markets to include. Reuse any preferences already given.
+   Show strategy-specific exclusions and reasons without silently changing them.
+5. Verify the selected strategy/account/markets, run the applicable backtest,
+   explain results and limitations, then confirm activation under existing rules.
+
+Each strategy choice should explain in plain language what triggers trades, candle
+timeframe and scan frequency, exit/stop behavior, history requirements and known
+limitations. Show its testing status separately from performance evidence. Do not
+imply a guaranteed return, challenge pass or validated superiority. The user can
+choose by number or name; the agent handles the module ID/version and private
+configuration. Keep the first menu compact, with details available on request.
+
+Offer only implemented, tested modules as selectable choices. Research ideas or
+unsupported custom strategies must not appear as ready-to-run options. While the
+kit has only the default daily strategy, explain that plainly instead of showing
+a fictitious multi-strategy menu. This section defines future onboarding; it does
+not change the current beta's setup order or add runtime strategy support.
+
+When resuming setup, reuse the confirmed account and strategy rather than asking
+again. For another account, ask whether to reuse the strategy preference, then
+validate it against that account and create an independent private instance.
+
 ## Multiple strategies and accounts
 
 Adding a strategy and running several strategies on one account are separate
@@ -72,8 +105,11 @@ Use a verified-flat maintenance boundary for the initial implementation.
   paths select the same strategy version.
 - Recovery preserves ownership and protective stops; switching strategies cannot
   reuse incompatible approval or reinterpret previous position state.
-- A fresh user setup asks for strategy, markets and account in plain language and
-  records decisions privately. No developer commands are required from the user.
+- A fresh user setup confirms account connection/selection before presenting
+  strategy choices, then selects markets and records decisions privately. Test
+  multiple accounts, existing preferences, failed authentication, unsupported
+  strategies and a catalog with only one implemented strategy. No developer
+  commands are required from the user.
 
 These are future acceptance criteria. The current beta remains the original daily
 strategy while the first authenticated Propr setup is completed.

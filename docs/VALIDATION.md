@@ -59,3 +59,32 @@ GitHub Actions also passed the Python 3.11, 3.12 and 3.13 jobs for beta.5: https
 ### Authenticated setup follow-up (user-reported)
 
 A later screenshot reports Dot successfully read the selected account and matched its starting balance and 3% daily-loss / 6% static-drawdown / 10% target rules. It could not establish explicit free-trial mode, the UTC day-start balance or that balance's reference date from inspected responses. Its reported account type was `paper` and the linked challenge name was Free Trial, neither accepted as the required explicit trial mapping. Trading remains off. The public SDK/reference reviewed here does not define these three fields; the linked OpenAPI URL returned HTTP 403 from this development environment as well. Actual redacted response structure or authoritative provider semantics are needed before changing the adapter. This is not evidence that Propr cannot provide them.
+
+## 2026-10-08: observed Propr adapter and daily/live risk data (beta.6)
+
+All 105 local tests pass. New checks cover ID-based active phase joins, rejected
+mismatched/inactive accounts, current UTC daily references and isolated margin,
+composite free-trial product evidence, read-only inspection preserving private
+state, and research backtests without broker credentials. Seven live-mark tests
+cover long/short equity, gross exposure, stale/missing/invalid data, account-change invalidation,
+reconnect cache clearing, engine integration, and a real local WebSocket
+handshake/read/shutdown plus redirect rejection, using only synthetic credentials.
+
+The user-supplied redacted diagnostic passes the eight automatic mappings and
+composite trial-catalog check. Its account values/identifiers/dates remain outside
+the repository and were not used as real configuration. No real key was used.
+
+Sources: https://www.propr.xyz/developers (interactive Integration tab, inspected
+October 8) and https://github.com/XBorgLabs/propr-docs. The live reference documents
+`daily-metrics` and its two balance fields, but not its JSON envelope/date key;
+those paths must be established from the authenticated response. WebSocket
+transport uses pinned websockets 17.1 with redirects rejected and private logging.
+
+Outstanding: authenticated daily-metrics binding and Propr WebSocket behavior,
+full chosen-market verification, production cloud persistence/recovery, and a
+qualifying trial order/fill/stop. No strategy-performance claim follows from these
+adapter tests. The original prompt preservation test remains unchanged.
+
+The beta.6 package was installed into a clean virtual environment and all 105 tests
+passed from outside the source checkout on Python 3.14.7. This also verified the
+pinned WebSocket dependency and installed CLI version.

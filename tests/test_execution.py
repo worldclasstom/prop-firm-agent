@@ -39,11 +39,14 @@ class FakeClient:
         self.lose_response=False; self.partial=False; self.mark=102
         self.equity=25000; self.trial=True
     def account(self):
-        return {'balance':'25000','fixture_equity':str(self.equity),'fixture_start':'25000',
+        return {'accountId':'trial-1','balance':'25000','fixture_equity':str(self.equity),'fixture_start':'25000',
                 'fixture_day_start':'25000','fixture_day':'2026-10-07','fixture_daily':'.03','fixture_max':'.06',
                 'fixture_target':'.10','fixture_drawdown':'static'}
     def attempts(self):
-        return [{'accountId':'trial-1','challengeId':'challenge-1','status':'active','fixture_isTrial':self.trial}]
+        return [{'attemptId':'attempt-1','accountId':'trial-1','challengeId':'challenge-1','status':'active','fixture_isTrial':self.trial}]
+    def attempt(self, attempt_id):
+        assert attempt_id == 'attempt-1'
+        return self.attempts()[0]
     def challenges(self): return [{'challengeId':'challenge-1'}]
     def orders(self): return copy.deepcopy(self.order_rows)
     def positions(self): return copy.deepcopy(self.position_rows)

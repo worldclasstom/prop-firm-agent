@@ -2,7 +2,7 @@
 
 A shared framework for building your own Propr trading agent. Give your cloud agent the [setup prompt](docs/START-PROMPT.md); it installs the framework, asks which markets you want and configures your private trading instance on its own cloud VM.
 
-**Trial-testing beta: v0.2.0-beta.5.** This release contains order-execution code, protective stops, exits, risk monitoring and a daily scheduler. Automated tests use simulated API responses. Real Propr execution and Dot's background runtime still need an end-to-end acceptance test. The kit checks those prerequisites and reports blockers before it starts.
+**Trial-testing beta: v0.2.0-beta.6.** This release contains order-execution code, protective stops, exits, risk monitoring and a daily scheduler. Automated tests use simulated API responses. Real Propr execution and Dot's background runtime still need an end-to-end acceptance test. The kit checks those prerequisites and reports blockers before it starts.
 
 The [Agent Kit page](https://prosperitylabs.co/agent) contains the rules and starting prompt. This repository is the shared framework and update source. It supplies reusable strategy, order-execution and risk-management components, tests and setup instructions. Your AI configures those components for your own account; it does not need to rewrite the order engine.
 

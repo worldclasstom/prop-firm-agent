@@ -47,16 +47,7 @@ def digest(config):
     return hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()
 
 
-def validate(config):
-    if not isinstance(config.get('account_id'), str) or not config['account_id']:
-        raise ValueError('Select an explicit free-trial account ID')
-    environment_account = os.environ.get('CHALLENGE_ACCOUNT_ID')
-    if environment_account and environment_account != config['account_id']:
-        raise ValueError('CHALLENGE_ACCOUNT_ID must match the explicit configured account')
-    if config.get('entry_order_type', 'limit') not in ('limit', 'market'):
-        raise ValueError('entry_order_type must be limit or market')
-    if config.get('account_mode', 'trial') not in ('trial', 'paid'):
-        raise ValueError('Account mode must be trial or paid')
+def validate_markets(config, *, trading=True):
     markets = config.get('markets', [])
     if not markets or len({m['asset'] for m in markets}) != len(markets):
         raise ValueError('Select a unique market watchlist')
@@ -71,8 +62,9 @@ def validate(config):
             raise ValueError('Invalid size precision')
         if D(m['quantity_step']) != D(10) ** -m['sz_decimals']:
             raise ValueError('Quantity step must match verified Hyperliquid size precision')
-        if m.get('stop_supported') is not True or not m.get('evidence'):
-            raise ValueError('Verify market metadata and stop support during setup')
+        if not m.get('evidence') or (trading and m.get('stop_supported') is not True):
+            raise ValueError('Verify market metadata and stop support during setup' if trading
+                             else 'Record market metadata sources and research assumptions')
         sessions = m.get('sessions_utc')
         if sessions != '24/7':
             if not isinstance(sessions, list) or not sessions:
@@ -80,6 +72,29 @@ def validate(config):
             for s in sessions:
                 if s['weekday'] not in range(7) or not 0 <= s['start_minute'] < s['end_minute'] <= 1440:
                     raise ValueError('Invalid UTC trading session')
+    return config
+
+
+def validate_research(config):
+    """Historical simulation needs market metadata, not broker credentials/approval."""
+    validate_markets(config, trading=False)
+    initial = D(str(config.get('backtest_initial_balance', '25000')))
+    if not initial.is_finite() or initial <= 0:
+        raise ValueError('backtest_initial_balance must be positive and finite')
+    return config
+
+
+def validate(config):
+    if not isinstance(config.get('account_id'), str) or not config['account_id']:
+        raise ValueError('Select an explicit free-trial account ID')
+    environment_account = os.environ.get('CHALLENGE_ACCOUNT_ID')
+    if environment_account and environment_account != config['account_id']:
+        raise ValueError('CHALLENGE_ACCOUNT_ID must match the explicit configured account')
+    if config.get('entry_order_type', 'limit') not in ('limit', 'market'):
+        raise ValueError('entry_order_type must be limit or market')
+    if config.get('account_mode', 'trial') not in ('trial', 'paid'):
+        raise ValueError('Account mode must be trial or paid')
+    validate_markets(config)
     if not config.get('account_mapping') or not config.get('mapping_evidence'):
         raise ValueError('Map actual Propr response fields using propfirm inspect and SETUP.md')
     return config

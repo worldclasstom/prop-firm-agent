@@ -96,6 +96,11 @@ class ReadOnlyClient:
     def attempts(self):
         return self.pages('/v1/challenge-attempts')
 
+    def attempt(self, attempt_id):
+        if not isinstance(attempt_id, str) or not attempt_id:
+            raise ValueError('A challenge attempt ID is required')
+        return self.request('GET', '/v1/challenge-attempts/' + quote(attempt_id, safe=''))
+
     def challenges(self):
         return self.pages('/v1/challenges')
 
@@ -121,6 +126,10 @@ class Client(ReadOnlyClient):
 
     def account(self):
         return self.request('GET', self.account_path)
+
+    def daily_metrics(self):
+        """Official developers reference, Integration / Deriving Live Values."""
+        return self.request('GET', self.account_path + '/daily-metrics')
 
     def orders(self):
         return self.pages(self.account_path + '/orders')

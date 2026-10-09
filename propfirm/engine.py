@@ -3,6 +3,7 @@ import hashlib
 import json
 import threading
 import time
+from dataclasses import replace
 from datetime import datetime, timezone
 from decimal import Decimal as D
 from .account import select_documents, snapshot
@@ -32,6 +33,10 @@ class Engine:
         self.sleep = sleeper
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         self.healthy_at = None
+        self.live_marks = None
+        if config.get('account_adapter') == 'propr-v1':
+            from .live_marks import LiveMarks
+            self.live_marks = LiveMarks(client.api_key, client.account_id)
         self.markets = {m['asset']: m for m in config['markets']}
         saved = self.store.get('account_id')
         if saved and saved != config['account_id']:
@@ -50,7 +55,12 @@ class Engine:
 
     def account(self):
         started = self.clock()
-        result = snapshot(select_documents(self.client), self.config, started)
+        revision = self.live_marks.revision() if self.live_marks else None
+        documents = select_documents(self.client, include_daily=self.config.get('account_adapter') == 'propr-v1')
+        result = snapshot(documents, self.config, started)
+        if self.live_marks:
+            result = replace(result, equity=self.live_marks.equity(documents['account'],
+                             self.client.positions(), revision))
         if result.day != self.clock().date().isoformat():
             raise ValueError('UTC reset crossed during account read; retry fresh')
         return result
@@ -289,6 +299,7 @@ class Engine:
                 snap = self.tick()
                 if snap is None or self.store.kill_reason() or self.store.get('daily_halt_date') or self.store.get('entry_block'):
                     break
+                revision = self.live_marks.revision() if self.live_marks else None
                 positions, orders = self.client.positions(), active(self.client.orders())
                 occupied = {p['asset'] for p in positions} | {o['asset'] for o in orders if not o.get('reduceOnly', False)}
                 if asset in occupied or len(occupied) >= 3:
@@ -299,7 +310,8 @@ class Engine:
                     self.report('entry_skipped', asset=asset, reason='quote_or_session_unavailable')
                     continue
                 price = rounded_price(ask if side == 'long' else bid, market['sz_decimals'], side == 'short')
-                gross = sum((abs(D(p['notionalValue'])) for p in positions), D(0))
+                gross = (self.live_marks.gross(positions, revision) if self.live_marks else
+                         sum((abs(D(p['notionalValue'])) for p in positions), D(0)))
                 # Any unresolved entry blocks new submissions; do not estimate unknown notional.
                 if any(not o.get('reduceOnly', False) for o in orders):
                     continue

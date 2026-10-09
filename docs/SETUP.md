@@ -2,14 +2,14 @@
 
 These instructions are for the AI agent doing the installation. The visitor gives you the starting prompt, chooses markets and supplies access to a Propr free trial. Install the shared framework and configure a private instance on your existing cloud VM. Handle the files, configuration and commands for them. Keep their API key, account ID, chosen markets, configuration, order history and reports in private storage on that VM, outside the source checkout. Never publish those files or send them to Prosperity Labs. Reuse the framework's execution and risk components rather than generating a separate engine for every user.
 
-The kit contains executable trading code. v0.2.0-beta.5 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
+The kit contains executable trading code. v0.2.0-beta.6 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
 
 ## 1. Install the shared release and run offline tests
 
 Use your existing cloud computer. Do not ask the visitor to buy hosting, configure SSH or keep their laptop on. If Dot delegates to Codex cloud, use a configured cloud environment for this repository. Guide only missing in-app setup and pass the repository and full instructions to the task.
 
 ```sh
-git clone --branch v0.2.0-beta.5 https://github.com/worldclasstom/prop-firm-agent.git
+git clone --branch v0.2.0-beta.6 https://github.com/worldclasstom/prop-firm-agent.git
 cd prop-firm-agent
 python3 -m venv .venv
 . .venv/bin/activate
@@ -69,24 +69,55 @@ Domain-scoped secret injection is supported through the platform's documented me
 propfirm inspect --account-id 'THE_SELECTED_ACCOUNT_ID'
 ```
 
-This makes authenticated reads and saves `setup/account-inspection.json` privately. It contains the exact account, matching challenge attempt and linked challenge. It sends no orders. The official docs leave some account fields unspecified, so use this observed response to populate `account_mapping` in private `config.json`. Do not guess a field, use an account name as proof, or set `trial=true` locally as a substitute for Propr's response.
+This retrieves the account, the detailed matching attempt, linked challenge and
+`GET /v1/accounts/{accountId}/daily-metrics`. It saves the response privately in
+`setup/account-inspection.json`, plus a proposed mapping report in
+`setup/account-mapping.json`. It sends no orders and never overwrites configuration
+or approvals. The agent handles the following configuration; do not ask the visitor
+to find JSON fields or paste account exports.
 
-Each mapping is `{ "source": "account" | "attempt" | "challenge", "path": ["actual", "field"] }`. Numeric fields can be strings or numbers. Required mappings:
+Use `account_adapter: "propr-v1"` in private `config.json`. Copy `account_mapping`
+and `mapping_evidence` from the inspection report. The adapter resolves
+`attempt.currentPhaseId` through `attemptPhaseId`, then joins `phaseId` to the
+challenge rules on every read. It validates identity, active status, starting
+balance, USDC settlement, Hyperliquid venue and the unchanged 3% / 6% / 10% static
+rules. Phase array order is never treated as identity.
 
-| Mapping | Meaning |
-| --- | --- |
-| `trial` | A server-returned explicit trial/type/mode field, with `equals: true` or the server's literal `trial` / `free_trial` value. |
-| `starting_balance` | Original challenge balance. Must remain fixed. |
-| `day_start_balance` | Propr's current UTC day-start balance, not current equity. |
-| `day_reference` | The date/ISO timestamp belonging to that day-start reference. |
-| `balance` | Current account balance. |
-| `equity` | Current account equity, including open P&L. |
-| `daily_loss_fraction` | Must equal 0.03. Add `scale: 0.01` if the API expresses it as 3 rather than 0.03. |
-| `max_drawdown_fraction` | Must equal 0.06. Same explicit scale convention. |
-| `profit_target_fraction` | Must equal 0.10. Same explicit scale convention. |
-| `drawdown_type` | Explicit static drawdown field, with `equals: "static"`. |
+For trial eligibility it checks the linked paper account, exact `free-trial`
+catalog slug, matching product ID and active one-time prices that are all zero.
+This composite check uses the actual observed catalog structure; a display name,
+`paper` alone, or a local `trial=true` flag does not qualify. Missing or conflicting
+product evidence fails verification. Paid accounts require the separate explicit
+mode proof and authorization described below.
 
-If no direct equity field exists, map `unrealized_pnl` and `isolated_position_margin` instead. The official SDK computes equity as balance + unrealised P&L + isolated position margin. Verify this against the actual account and dashboard before approval. Record field meanings and source evidence in `mapping_evidence`. If the needed values cannot be established, report the missing field or schema conflict; do not bypass verification. Account adapters can be improved centrally after the first real response is observed.
+**Daily reference:** the [official developers page](https://www.propr.xyz/developers),
+Integration → Deriving Live Values, documents `daily-metrics` and the formula
+`startingBalance + startingIsolatedPositionMargin`. Its date key and response
+envelope are not illustrated. Inspect the actual authenticated response and add
+`daily_metrics_binding` with:
+
+- `rows_path`: the array of actual keys leading to the daily row or rows; use `[]`
+  only if the response itself is that row or array.
+- `date_path`: the actual key path within a row identifying its UTC reference day.
+- `evidence`: the observed field meaning, source and inspection date.
+
+No guessed date keys are provided here. Accept only a dated current UTC row for
+the selected account. Do not use the current balance, generic `updatedAt`, a local
+clock substituted for a provider date, or diagnostic values. A stale row at UTC
+rollover blocks entries until fresh data arrives. If the actual response has a
+different shape, retain it privately, implement and test the documented mapping,
+and continue; request a provider clarification only for unresolved semantics.
+
+**Live equity:** REST mark prices can lag according to the same Integration page.
+The adapter therefore authenticates to `wss://api.propr.xyz/ws` and uses
+`mark.updated` prices for each open position, plus REST balance and isolated
+margin. Gross position exposure also uses fresh marks for the 2x cap. `verify`, approval and the risk worker require a connected stream. Missing
+or more-than-ten-second-old marks, invalid position fields, a disconnect, or an
+account event during a state read fail the read and prevent new entries. Reconnect
+clears the old marks. Existing protective orders remain at Propr; the worker
+retries checks. Verify this feed and equity against the actual account before
+activation. REST unrealized P&L is only a diagnostic snapshot, not the live risk
+price source for this adapter.
 
 For each selected instrument, fill a market object from verified API/documentation metadata:
 
@@ -115,9 +146,18 @@ The strings marked VERIFIED are instructions, not valid configuration values. Do
 `verify` rechecks Propr market availability via the documented margin-config read, metadata precision, at least 60 complete daily bars, trial identity and challenge rules. It never changes leverage. Verify stop support from the current documented instrument/API capability; the first actual fill must then confirm its protection at Propr.
 
 ```sh
-propfirm verify
 propfirm backtest
+propfirm verify
 ```
+
+Historical research can run before account verification. Use
+`propfirm backtest --config /absolute/private/research.json` for a separate
+verified research watchlist when the live watchlist is still being prepared.
+Set `backtest_initial_balance` explicitly to the intended scenario balance; the
+default is 25,000 USDC. The report labels this as research, never trading approval.
+It needs validated market metadata and history, but no API key, trial proof or
+live stop-support assertion. Do not enable a live market solely because its
+research run succeeds.
 
 Read private `reports/backtest.md`. The daily-data model uses next-bar-open fill proxies and disclosed per-instrument fees/slippage/funding assumptions. It cannot prove IOC fill rates or establish which entry type performs better. Missing/inadequate data and possible intraday breaches are reported as limitations. Defaults are assumptions, not measured account costs.
 

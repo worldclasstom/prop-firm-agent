@@ -1,8 +1,19 @@
-# Status: v0.2.0-beta.5
+# Status: v0.2.0-beta.6
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
 
-This release adds read-only account discovery after API-key saving. The agent retrieves account IDs, presents choices and asks the user to confirm, rather than asking them to locate an ID manually. Discovery preserves existing configuration and does not approve or start trading. Multiple accounts remain separate private instances. The trading engine and preserved original specification are unchanged. All 84 offline tests passed locally, including preservation of the original specification. Validation results are recorded in docs/VALIDATION.md.
+This release fixes the account/phase joins found in the first authenticated Dot
+setup. It adds the documented daily-metrics read, a narrow composite trial-catalog
+check, and WebSocket mark prices for risk equity. Historical research no longer
+waits for broker account verification. All 105 local tests pass, including socket
+handshake/read/shutdown and redirect rejection with synthetic credentials. The
+original strategy and risk thresholds remain unchanged.
+
+The redacted diagnostic's actual structure passes the eight automatic mappings
+and composite trial-product check. Its monetary values, dates and identifiers are
+synthetic and were not used as live configuration. The newly discovered
+`daily-metrics` response and live Propr mark stream still need the authenticated
+Dot run; local tests do not establish successful trial trading.
 
 ## Implemented and checked
 
@@ -26,9 +37,9 @@ Beta.4 addresses the next user-reported Dot failure: four form tests failed unde
 
 ## What still needs the first real user run
 
-1. An authenticated account-discovery run and user-confirmed free-trial account selection. Authenticated account fields must be inspected and mapped, including trial proof and the current day-start balance. Public docs do not fully specify them.
+1. Run beta.6 against the already selected account, inspect and bind the actual daily-metrics envelope/date field, and verify the Propr live mark stream. Discovery, selection and key entry were observed in user screenshots; this release has not yet been authenticated in Dot.
 2. The user's chosen markets, checked against that account's API/stop support and instrument metadata.
 3. Observed Dot/cloud support for persistent background execution across idle periods, task endings and supervisor restarts.
 4. A qualifying real Propr trial order, fill and confirmed protective stop, followed by recovery and stop-to-flat checks. No signal is valid but does not validate fills.
 
-The user now reports an authenticated connection in Dot, but trial-mode and daily-reference mappings remain unresolved (see docs/VALIDATION.md). No Propr account has been connected in this local development session. No actual order has been sent. Offline tests and public market-data checks do not establish strategy performance or guarantee challenge outcomes. See docs/VALIDATION.md and docs/REQUIREMENTS.md.
+The user reports an authenticated connection in Dot. This release addresses its adapter gaps using the diagnostic and newly located official Integration documentation; applying it and verifying daily-metrics remain outstanding (see docs/VALIDATION.md). No Propr account has been connected in this local development session. No actual order has been sent. Offline tests and public market-data checks do not establish strategy performance or guarantee challenge outcomes. See docs/VALIDATION.md and docs/REQUIREMENTS.md.

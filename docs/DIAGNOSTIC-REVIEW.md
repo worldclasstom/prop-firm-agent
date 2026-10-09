@@ -97,3 +97,21 @@ supported API mappings for these checks:
 The linked `https://propr.xyz/openapi.json` returned HTTP 403. Please provide an
 accessible current schema or the relevant field definitions. No credentials or
 private account exports are needed in the response.
+
+## Follow-up: official Integration documentation and beta.6
+
+The user supplied `/docs/bot`, which redirects to the interactive developers
+reference. Its **Integration** tab documents the previously missed
+`GET /accounts/{accountId}/daily-metrics`, the daily-loss base
+`startingBalance + startingIsolatedPositionMargin`, and the live equity formula.
+It explicitly warns that REST mark prices lag and supplies `mark.updated` on
+`wss://api.propr.xyz/ws`. These resolve the endpoint/formula questions above;
+the draft question has not been sent and should not be sent unchanged.
+
+Beta.6 implements these reads and live marks, automatic ID-based phase mappings,
+and the composite linked paper/free-trial/zero-price catalog check. The supplied
+redacted structure passes that catalog check; the provider has not separately
+promised its long-term stability. Missing or changed evidence fails verification.
+The daily-metrics envelope and reference-date path still need the real response,
+which was absent from the archive. No synthetic date or monetary value was used
+as account truth. Tests use explicitly synthetic response envelopes/date keys.

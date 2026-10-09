@@ -1,10 +1,23 @@
 # Versions and updates
 
-Install an exact release. `v0.2.0-beta.5` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence. Beta.5 adds `propfirm accounts`; reuse the saved API key, run discovery and confirm the account. It does not migrate or overwrite private configuration, approvals or trading state.
+Install an exact release. `v0.2.0-beta.6` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence. Beta.6 adds `daily-metrics`, joins active phases by ID, verifies the linked trial
+catalog, uses live Propr WebSocket marks for equity, and separates historical
+research from broker verification. It requires the pinned `websockets` dependency
+installed by pip. It does not migrate or overwrite private configuration,
+approvals or trading state.
+
+For the existing stopped Dot setup, preserve the saved key, selected account,
+non-FX preferences, completed checks and private files. Follow SETUP.md to inspect
+the selected account again, set `account_adapter: "propr-v1"`, copy the generated
+mappings, and bind the actual daily-metrics envelope/date. Do not delete state or
+ask the visitor to supply the key or account ID again. The setup agent performs
+this migration; new config and executable version require fresh verification and
+approval. Old generic mappings remain readable, but do not claim they include the
+new Propr live-equity or catalog checks.
 
 ```sh
 propfirm check-update
-propfirm prepare-update --version v0.2.0-beta.5
+propfirm prepare-update --version v0.2.0-beta.6
 ```
 
 The first command reads releases and notes. The second clones the requested release into a separate directory under the private kit home, creates a virtual environment and runs the tests with isolated test state and no inherited API key. It never changes or restarts the running worker. A visitor normally uses this shared upstream; fork only when contributing a change.

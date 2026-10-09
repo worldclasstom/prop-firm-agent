@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import sys
 from . import __version__
-from .config import root_dir, read_json, save_json, load_key, digest, validate, runtime_ready
+from .config import root_dir, read_json, save_json, load_key, digest, validate, validate_research, runtime_ready
 
 
 def main():
@@ -27,7 +27,8 @@ def main():
     discover = sub.add_parser('markets', help='Read public Hyperliquid market metadata')
     discover.add_argument('--dex', default='')
     sub.add_parser('verify', help='Validate config, account rules, trial proof, selected markets and history')
-    sub.add_parser('backtest', help='Run the disclosed daily-data scenario model')
+    backtest = sub.add_parser('backtest', help='Run historical research without broker credentials or trading approval')
+    backtest.add_argument('--config', type=Path, help='Separate private research config; does not change live config')
     approve = sub.add_parser('approve-trial', help='Record authorization for the verified free-trial configuration')
     approve.add_argument('--account-id', required=True)
     paid = sub.add_parser('approve-paid', help='Separate explicit paid-account opt-in')
@@ -138,19 +139,23 @@ def main():
     from .propr import Client
     from .account import select_documents, snapshot
     if args.command == 'inspect':
+        from .account import inspection_report
         client = Client(load_key(root), args.account_id)
-        documents = select_documents(client)
+        documents = select_documents(client, include_daily=True)
         save_json(root / 'setup' / 'account-inspection.json', documents)
-        print('Saved private account inspection. Map actual response fields using docs/SETUP.md. No orders sent.')
+        report = inspection_report(documents, args.account_id)
+        save_json(root / 'setup' / 'account-mapping.json', report)
+        print(json.dumps(report, indent=2))
         return 0
-    config = validate(read_json(root / 'config.json'))
     if args.command == 'backtest':
+        config = validate_research(read_json(args.config or root / 'config.json'))
         from .backtest import simulate
         markets = {m['asset']: m for m in config['markets']}
         histories = {a: data.candles(m) for a,m in markets.items()}
         costs = config.get('backtest_costs', {})
         from decimal import Decimal as D
-        result = simulate(histories, markets, fee=D(costs.get('fee_per_side', '.00075')),
+        initial = D(str(config.get('backtest_initial_balance', '25000')))
+        result = simulate(histories, markets, initial=initial, fee=D(costs.get('fee_per_side', '.00075')),
                           slippage=D(costs.get('slippage_per_side', '.0005')),
                           funding=D(costs.get('daily_funding_cost', '.0001')))
         windows = []
@@ -158,7 +163,7 @@ def main():
         # Non-overlapping 90-day test windows, each with its own preceding 60-bar warmup.
         for start in range(60, length-29, 90):
             segment = {a: rows[-length:][start-60:min(start+90, length)] for a, rows in histories.items()}
-            window = simulate(segment, markets, fee=D(costs.get('fee_per_side', '.00075')),
+            window = simulate(segment, markets, initial=initial, fee=D(costs.get('fee_per_side', '.00075')),
                               slippage=D(costs.get('slippage_per_side', '.0005')),
                               funding=D(costs.get('daily_funding_cost', '.0001')))
             windows.append({'start_index': start, 'failure_or_uncertainty': window['failure_or_uncertainty']})
@@ -167,6 +172,10 @@ def main():
         result['window_denominator'] = len(windows)
         result['history_bars'] = {a: len(rows) for a, rows in histories.items()}
         result['version'] = __version__
+        result['research_only'] = True
+        result['account_verified'] = False
+        result['initial_balance_assumption'] = str(initial)
+        result['market_metadata'] = config['markets']
         result['assumptions'] = {'fee_per_side': costs.get('fee_per_side', '.00075'),
                                'slippage_per_side': costs.get('slippage_per_side', '.0005'),
                                'daily_funding_cost': costs.get('daily_funding_cost', '.0001')}
@@ -181,9 +190,22 @@ def main():
         path.chmod(0o600)
         print('Saved reports/backtest.md and backtest.json in the private kit directory.')
         return 0
+    config = validate(read_json(root / 'config.json'))
     client = Client(load_key(root), config['account_id'])
     if args.command in ('verify', 'approve-trial', 'approve-paid'):
-        snap = snapshot(select_documents(client), config)
+        if config.get('account_adapter') == 'propr-v1':
+            from dataclasses import replace
+            from .live_marks import LiveMarks
+            marks = LiveMarks(client.api_key, client.account_id)
+            try:
+                revision = marks.revision()
+                documents = select_documents(client, include_daily=True)
+                snap = snapshot(documents, config)
+                snap = replace(snap, equity=marks.equity(documents['account'], client.positions(), revision))
+            finally:
+                marks.close()
+        else:
+            snap = snapshot(select_documents(client), config)
         save_json(root / 'markets.json', config['markets'])
         for market in config['markets']:
             client.margin(market['asset'])
@@ -210,34 +232,39 @@ def main():
         return 0
     from .engine import Engine
     engine = Engine(client, data, config, root)
-    from .service import serve, exclusive
-    if args.command == 'reset-halt':
-        with exclusive(root), engine.lock:
-            if args.account_id != config['account_id'] or client.positions() or any(o['status'] not in ('filled','cancelled','canceled','expired','rejected') for o in client.orders()):
-                raise ValueError('Cannot reset until this account is confirmed flat with no active orders')
-            engine.account()
-            with engine.store.db:
-                engine.store.db.execute("DELETE FROM flags WHERE key IN ('kill','operator_stop','entry_block','shutdown_complete')")
-            (root / 'STOP').unlink(missing_ok=True)
-            engine.report('manual_halt_reset')
-        print('Halt manually reset after flat confirmation. No worker was started.')
+    try:
+        from .service import serve, exclusive
+        if args.command == 'reset-halt':
+            with exclusive(root), engine.lock:
+                if args.account_id != config['account_id'] or client.positions() or any(o['status'] not in ('filled','cancelled','canceled','expired','rejected') for o in client.orders()):
+                    raise ValueError('Cannot reset until this account is confirmed flat with no active orders')
+                engine.account()
+                with engine.store.db:
+                    engine.store.db.execute("DELETE FROM flags WHERE key IN ('kill','operator_stop','entry_block','shutdown_complete')")
+                (root / 'STOP').unlink(missing_ok=True)
+                engine.report('manual_halt_reset')
+            print('Halt manually reset after flat confirmation. No worker was started.')
+            return 0
+        if args.command == 'resume-entries':
+            with exclusive(root), engine.lock:
+                if engine.store.kill_reason():
+                    raise ValueError('Kill remains latched; manual review and reset required')
+                engine.recover()
+                orders = client.orders()
+                if any(not any(o.get('intentId') == p['intentId'] for o in orders) for k,p in engine.store.all_intents() if k.startswith('entry:')):
+                    raise ValueError('Unresolved entry intent remains')
+                engine.tick()
+                if engine.store.kill_reason():
+                    raise ValueError('Risk checks latched a kill; entries remain blocked')
+                engine.store.put('entry_block', None)
+            print('Entry block cleared after reconciliation. Existing daily halt still applies.')
+            return 0
+        serve(engine)
         return 0
-    if args.command == 'resume-entries':
-        with exclusive(root), engine.lock:
-            if engine.store.kill_reason():
-                raise ValueError('Kill remains latched; manual review and reset required')
-            engine.recover()
-            orders = client.orders()
-            if any(not any(o.get('intentId') == p['intentId'] for o in orders) for k,p in engine.store.all_intents() if k.startswith('entry:')):
-                raise ValueError('Unresolved entry intent remains')
-            engine.tick()
-            if engine.store.kill_reason():
-                raise ValueError('Risk checks latched a kill; entries remain blocked')
-            engine.store.put('entry_block', None)
-        print('Entry block cleared after reconciliation. Existing daily halt still applies.')
-        return 0
-    serve(engine)
-    return 0
+    finally:
+        if engine.live_marks:
+            engine.live_marks.close()
+        engine.store.close()
 
 
 def entrypoint():

@@ -76,6 +76,21 @@ or otherwise route around platform restrictions. Recheck connectivity and recove
 in the actual worker context after any supported correction. Command-tool success
 must not be reused as evidence that a different background environment works.
 
+When the desktop path lacks the command tool's managed network route, inspect
+whether the command environment itself offers a supported persistent-worker
+mechanism. Do not transfer its loopback proxy to another network namespace.
+If that mechanism is supported, test a bounded, harmless worker there using
+repeated public reads and heartbeat timestamps before and after the initiating
+task actually ends. A command returning while its tool session remains active is
+not task teardown. Record the lifecycle event and continuous results together;
+a heartbeat-only desktop test cannot establish network survival in this context.
+Reuse equivalent completed evidence instead of repeating it. Do not keep the
+task alive artificially to manufacture a passing lifetime test. If no supported
+mechanism is exposed, record that exact missing capability rather than retrying
+the same desktop launch or treating it as a request for broader permissions.
+Passing this bounded probe still requires authenticated REST/live marks and the
+remaining supervisor and host-recovery checks before trading.
+
 ## 3. Connect and verify the selected account
 
 First confirm whether the visitor already has a Propr account and has selected Free Trial. Reuse answers they have already given. If they need an account, give them https://app.propr.xyz/r/4ZZFhyJg with this explanation:

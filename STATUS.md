@@ -82,6 +82,28 @@ All 127 repository tests pass, including four diagnostic tests for request scope
 secret redaction, HTTP versus transport failure, and redirect refusal. Beta.8's
 published package is unchanged; the diagnostic runs separately from the checkout.
 
+The downloaded beta8 runtime diagnostic was subsequently inspected locally:
+all bundled SHA256 checksums match and its probe matches the pinned repository
+script. Both desktop contexts fail before TLS (Propr ENETUNREACH, Hyperliquid
+ECONNREFUSED). The command context returns Hyperliquid HTTP 200 and Propr health
+HTTP 403, whose source is not established. Its proxy is loopback-only in a
+different network namespace. Neither desktop context inherits proxy variables;
+changing the Supervisor environment whitelist alone is therefore not a fix.
+An existing OS CA bundle passed SSL-context construction, not an API connection.
+
+The supplied recovery result records the installed engine completing synthetic
+shutdown after supervisor loss, retaining a stop during a rejected fake close,
+preserving its halt and singleton lock, and needing no manual orphan cleanup.
+The test patched runtime readiness and time and used fake broker adapters.
+This resolves the earlier failure only within that bounded offline test; the
+supplied Supervisor configurations are diagnostic-only, not a production launcher.
+
+The bundle does not establish a supported persistent worker in the command
+environment with network access surviving the initiating task's end. That is a
+distinct remaining investigation, not evidence that the desktop proxy can be
+copied or that a cloud worker is already available. No raw diagnostic archive or
+private configuration has been added to the public repository.
+
 Still required:
 
 1. Verify authenticated REST, public data and live marks from the actual worker's
@@ -94,8 +116,8 @@ Still required:
 3. Observed idle/task-ending behavior and autonomous supervisor recovery on the
    actual Dot cloud host. Prior child-process and controlled supervisor restart
    tests do not establish recovery after the supervisor or host disappears.
-   Retest the observed orphan-worker failure without manual cleanup and verify
-   exactly one supervised worker; retaining the duplicate-worker lock is required.
+   Extend the passed offline orphan-worker fix to the verified production launch
+   path, including outermost supervision; retain the duplicate-worker lock.
 4. A qualifying Propr trial order, fill and confirmed protective stop, followed
    by recovery and stop-to-flat checks. No signal is valid but does not validate
    fills. A fresh-user setup is still outstanding.

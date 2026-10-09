@@ -13,7 +13,7 @@ from .data import DAY, rounded_price, strategy_bars
 from .propr import APIError
 from .risk import RiskState, evaluate
 from .state import Store
-from .strategy import atr, entry, exit_signal, quantity
+from .strategy import atr, entry, exit_signal, quantity, risk_fraction
 
 TERMINAL = {'filled', 'cancelled', 'canceled', 'rejected', 'expired'}
 ACTIVE = {'pending', 'open', 'partially_filled', 'triggered'}
@@ -244,7 +244,8 @@ class Engine:
             self.store.put('starting_balance', str(snap.starting_balance))
             state = RiskState(self.store.get('daily_halt_date'), False)
             decision = evaluate(state, starting_balance=snap.starting_balance, day_start_balance=snap.day_start_balance,
-                       equity=snap.equity, now=self.clock(), snapshot_at=snap.observed_at, monitor_healthy=True, daily_scan=daily_scan)
+                       equity=snap.equity, now=self.clock(), snapshot_at=snap.observed_at, monitor_healthy=True, daily_scan=daily_scan,
+                       daily_loss_fraction=snap.daily_loss_fraction, max_drawdown_fraction=snap.max_drawdown_fraction)
             self.store.put('daily_halt_date', decision.state.daily_halt_date)
             if decision.flatten_required:
                 self.shutdown(decision.reason)
@@ -266,8 +267,9 @@ class Engine:
             self.healthy_at = self.clock()
             self.store.put('heartbeat', {'at': self.healthy_at.isoformat(), 'equity': str(snap.equity),
                           'balance': str(snap.balance), 'day_start_balance': str(snap.day_start_balance),
-                          'starting_balance': str(snap.starting_balance), 'daily_floor': str(snap.day_start_balance * D('.97')),
-                          'drawdown_floor': str(snap.starting_balance * D('.94'))})
+                          'starting_balance': str(snap.starting_balance),
+                          'daily_floor': str(snap.day_start_balance * (1 - snap.daily_loss_fraction)),
+                          'drawdown_floor': str(snap.starting_balance * (1 - snap.max_drawdown_fraction))})
             return snap
 
     def scan(self):
@@ -326,7 +328,8 @@ class Engine:
                     self.report('entry_skipped', asset=asset, reason='stop_not_representable')
                     continue
                 size = quantity(snap.starting_balance, snap.equity, gross, price, volatility,
-                                D(market['multiplier']), D(market['quantity_step']), quantity_floor(market))
+                                D(market['multiplier']), D(market['quantity_step']), quantity_floor(market),
+                                risk=risk_fraction(snap.max_drawdown_fraction))
                 if size == 0 or below_known_notional(market, size * price * D(market['multiplier'])):
                     continue
                 if unknown_minimums([market]):

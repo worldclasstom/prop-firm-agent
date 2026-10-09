@@ -77,12 +77,17 @@ class AdapterTests(unittest.TestCase):
             lambda d: d['attempt']['phases'][1].update(status='passed'),
             lambda d: d['account'].update(closedAt='2026-01-01'),
             lambda d: d['challenge'].update(isActive=False),
-            lambda d: d['challenge']['phases'][1].update(maxDailyLossPercent='5'),
+            lambda d: d['challenge']['phases'][1].update(maxDailyLossPercent='0'),
+            lambda d: d['challenge']['phases'][1].update(maxDailyLossPercent='100'),
             lambda d: d['challenge']['phases'][1].update(drawdownType='trailing'),
         ):
             docs = documents(); mutate(docs)
             with self.subTest(documents=docs), self.assertRaises(ValueError):
                 propr_mapping(docs, 'a')
+        # A rule the catalog changes after verification is refused at the snapshot, not the mapping.
+        docs = documents(); cfg = mapped_config(docs)
+        docs['challenge']['phases'][1].update(maxDailyLossPercent='5')
+        with self.assertRaises(ValueError): snapshot(docs, cfg, NOW)
 
     def test_trial_and_utc_reference_still_required(self):
         docs = documents(); cfg = mapped_config(docs)

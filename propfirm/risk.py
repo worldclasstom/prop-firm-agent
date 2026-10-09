@@ -4,6 +4,19 @@ from datetime import datetime, timezone
 from decimal import Decimal as D
 from .strategy import positive
 
+#: Propr's Classic one-step limits, the defaults every earlier configuration ran under.
+CLASSIC_DAILY_LOSS, CLASSIC_MAX_DRAWDOWN = D('.03'), D('.06')
+
+
+def inner_limits(daily_loss_fraction=CLASSIC_DAILY_LOSS, max_drawdown_fraction=CLASSIC_MAX_DRAWDOWN):
+    """The engine's own limits inside the challenge's: the day halts at two thirds of the daily
+    loss limit and the account stops for good at three quarters of the static drawdown
+    (2% and 4.5% on Classic; 2% and 2.25% on a 3% static drawdown)."""
+    positive(daily_loss_fraction, max_drawdown_fraction)
+    if daily_loss_fraction >= 1 or max_drawdown_fraction >= 1:
+        raise ValueError('Challenge limits must be fractions below 1')
+    return daily_loss_fraction * 2 / 3, max_drawdown_fraction * 3 / 4
+
 
 @dataclass(frozen=True)
 class RiskState:
@@ -23,8 +36,10 @@ class Decision:
 def evaluate(state: RiskState, *, starting_balance: D, day_start_balance: D,
              equity: D, now: datetime, snapshot_at: datetime,
              monitor_healthy: bool, daily_scan: bool = False,
-             max_age_seconds: int = 30) -> Decision:
-    """Halt at 2% daily equity loss; latch kill at 4.5% static equity loss.
+             max_age_seconds: int = 30,
+             daily_loss_fraction: D = CLASSIC_DAILY_LOSS,
+             max_drawdown_fraction: D = CLASSIC_MAX_DRAWDOWN) -> Decision:
+    """Halt the day at two thirds of the daily loss limit; latch kill at three quarters of the drawdown.
 
     Daily halts clear only at a daily scan on a later UTC date at/after 00:10.
     The caller must supply Propr's verified day-start reference for that date.
@@ -34,10 +49,11 @@ def evaluate(state: RiskState, *, starting_balance: D, day_start_balance: D,
         raise ValueError('Require finite equity and timezone-aware timestamps')
     if max_age_seconds <= 0:
         raise ValueError('Invalid freshness threshold')
+    daily_halt, kill = inner_limits(daily_loss_fraction, max_drawdown_fraction)
     utc = now.astimezone(timezone.utc)
     date = utc.date().isoformat()
     # A kill latch remains actionable even when data becomes unavailable.
-    killed = state.killed or equity <= starting_balance * D('.955')
+    killed = state.killed or equity <= starting_balance * (1 - kill)
     if killed:
         return Decision(RiskState(state.daily_halt_date, True), False, True, True, 'kill_latched')
     age = (now - snapshot_at).total_seconds()
@@ -46,7 +62,7 @@ def evaluate(state: RiskState, *, starting_balance: D, day_start_balance: D,
     halted = state.daily_halt_date
     if halted and date > halted and daily_scan and (utc.hour, utc.minute) >= (0, 10):
         halted = None
-    if equity <= day_start_balance * D('.98'):
+    if equity <= day_start_balance * (1 - daily_halt):
         halted = date
     if halted:
         return Decision(RiskState(halted), False, True, False, 'daily_halt')

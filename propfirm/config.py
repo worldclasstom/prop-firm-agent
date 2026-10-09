@@ -105,6 +105,8 @@ def validate(config):
         raise ValueError('entry_order_type must be limit or market')
     if config.get('account_mode', 'trial') not in ('trial', 'paid'):
         raise ValueError('Account mode must be trial or paid')
+    from .account import challenge_rules
+    challenge_rules(config)  # the product's limits, pinned at verification; Classic when absent
     validate_execution_model(config)
     validate_markets(config)
     if not config.get('account_mapping') or not config.get('mapping_evidence'):

@@ -57,17 +57,28 @@ def exit_signal(bars: list[Bar], side: Side) -> bool:
             else close > max(b.high for b in prior))
 
 
+#: Risk per position on the Classic 6% drawdown: 0.4% of the starting balance, one fifteenth of the drawdown.
+CLASSIC_RISK_FRACTION = D('.004')
+
+
+def risk_fraction(max_drawdown_fraction: D) -> D:
+    """The same share of any static drawdown that 0.4% is of Classic's 6%: the drawdown over fifteen."""
+    positive(max_drawdown_fraction)
+    return max_drawdown_fraction / 15
+
+
 def quantity(start_balance: D, equity: D, gross_notional: D, price: D,
-             volatility: D, multiplier: D, step: D, minimum: D) -> D:
-    """Risk 0.4% of starting balance at 2 ATR; cap gross notional at 2x equity.
+             volatility: D, multiplier: D, step: D, minimum: D,
+             risk: D = CLASSIC_RISK_FRACTION) -> D:
+    """Risk `risk` of the starting balance (0.4% on Classic) at 2 ATR; cap gross notional at 2x equity.
 
     multiplier must be verified quote-currency value per price point per unit.
     Portfolio slot count and currency conversions are the caller's responsibility.
     """
-    positive(start_balance, equity, price, volatility, multiplier, step, minimum)
+    positive(start_balance, equity, price, volatility, multiplier, step, minimum, risk)
     if not gross_notional.is_finite() or gross_notional < 0:
         raise ValueError('Invalid existing gross notional')
-    risk_size = start_balance * D('.004') / (2 * volatility * multiplier)
+    risk_size = start_balance * risk / (2 * volatility * multiplier)
     exposure_size = max(D(0), 2 * equity - gross_notional) / (price * multiplier)
     rounded = (min(risk_size, exposure_size) / step).to_integral_value(rounding=ROUND_FLOOR) * step
     return rounded if rounded >= minimum else D(0)

@@ -22,6 +22,37 @@ def number(documents, mapping):
     return value
 
 
+#: Propr's Classic one-step rules, the defaults for configurations that pin none (release 0.2.0b9 and earlier).
+CLASSIC_RULES = {'daily_loss_fraction': D('.03'), 'max_drawdown_fraction': D('.06'), 'profit_target_fraction': D('.10')}
+
+
+def challenge_rules(config):
+    """The limits the configuration was verified for, as fractions; Classic when none were pinned.
+
+    Any product with a static maximum drawdown is supported (Propr's Classic,
+    Turbo and Pro at any size). A trailing drawdown is refused: its floor
+    moves with the account's high-water mark by a rule the provider defines,
+    and nothing here computes one.
+    """
+    pinned = config.get('challenge_rules')
+    if not pinned:
+        return dict(CLASSIC_RULES)
+    if not isinstance(pinned, dict):
+        raise ValueError('challenge_rules must be an object')
+    rules = {}
+    for key in CLASSIC_RULES:
+        try:
+            value = D(str(pinned[key]))
+        except (KeyError, TypeError, InvalidOperation):
+            raise ValueError('challenge_rules must pin ' + key) from None
+        if not value.is_finite() or not 0 < value < 1:
+            raise ValueError('challenge_rules ' + key + ' must be a fraction between 0 and 1')
+        rules[key] = value
+    if str(pinned.get('drawdown_type', 'static')).lower() != 'static':
+        raise ValueError('Only a static maximum drawdown is supported')
+    return rules
+
+
 @dataclass(frozen=True)
 class Snapshot:
     starting_balance: D
@@ -30,6 +61,9 @@ class Snapshot:
     equity: D
     observed_at: datetime
     day: str
+    daily_loss_fraction: D = CLASSIC_RULES['daily_loss_fraction']
+    max_drawdown_fraction: D = CLASSIC_RULES['max_drawdown_fraction']
+    profit_target_fraction: D = CLASSIC_RULES['profit_target_fraction']
 
 
 def select_documents(client, *, include_daily=False):
@@ -98,13 +132,15 @@ def propr_mapping(documents, account_id):
         'isolated_position_margin': field('account', 'isolatedPositionMargin'),
         'drawdown_type': field('challenge', 'phases', ci, 'drawdownType', equals='static'),
     }
-    for key, provider, expected in (
-            ('daily_loss_fraction', 'maxDailyLossPercent', D('.03')),
-            ('max_drawdown_fraction', 'maxDrawdownPercent', D('.06')),
-            ('profit_target_fraction', 'profitTargetPercent', D('.10'))):
+    # The product's own limits, read from the current phase's rules and checked for sense here;
+    # snapshot() holds them to the limits the configuration was verified for.
+    for key, provider in (('daily_loss_fraction', 'maxDailyLossPercent'),
+                          ('max_drawdown_fraction', 'maxDrawdownPercent'),
+                          ('profit_target_fraction', 'profitTargetPercent')):
         mapping[key] = field('challenge', 'phases', ci, provider, scale='0.01')
-        if number(documents, mapping[key]) * D('.01') != expected:
-            raise ValueError('Account rules differ from Classic one-step: ' + key)
+        value = number(documents, mapping[key]) * D('.01')
+        if not 0 < value < 1:
+            raise ValueError('Account rule out of range: ' + key)
     positive(number(documents, mapping['starting_balance']))
     for key in ('balance', 'unrealized_pnl', 'isolated_position_margin'):
         number(documents, mapping[key])
@@ -133,6 +169,32 @@ def catalog_trial(documents, account_id):
                          p.get('billingPeriod') != 'one_time' or
                          number({'price': p}, {'source': 'price', 'path': ['price']}) != 0 for p in prices):
         raise ValueError('The linked free-trial product must have only active zero-price offers')
+    return True
+
+
+def catalog_paid(documents, account_id):
+    """Composite API evidence for a paid challenge: a priced catalog product that is not the free trial.
+
+    The mirror of catalog_trial for the observed catalog shape: the challenge
+    links to a product whose active one-time offers are all priced above
+    zero, under a slug other than free-trial. A narrow adapter for that
+    shape, never the display name alone, and not a provider guarantee.
+    """
+    propr_mapping(documents, account_id)
+    challenge = documents['challenge']
+    slug = challenge.get('slug')
+    if not isinstance(slug, str) or not slug or slug == 'free-trial':
+        raise ValueError('The linked catalog entry does not identify a paid challenge')
+    product = challenge.get('product', {})
+    if (not challenge.get('productId') or product.get('productId') != challenge['productId'] or
+            product.get('deletedAt') is not None):
+        raise ValueError('Paid-challenge product identity could not be verified')
+    prices = [p for p in product.get('prices', [])
+              if p.get('isActive') is True and p.get('deletedAt') is None]
+    if not prices or any(p.get('productId') != product['productId'] or
+                         p.get('billingPeriod') != 'one_time' or
+                         number({'price': p}, {'source': 'price', 'path': ['price']}) <= 0 for p in prices):
+        raise ValueError('The linked paid product must have only active one-time offers priced above zero')
     return True
 
 
@@ -187,6 +249,10 @@ def inspection_report(documents, account_id):
         trial = True
     except (ValueError, KeyError, TypeError):
         trial = False
+    try:
+        paid = catalog_paid(documents, account_id)
+    except (ValueError, KeyError, TypeError):
+        paid = False
     return {
         'account_id': account_id, 'adapter': 'propr-v1',
         'account_mapping': mapping,
@@ -194,8 +260,9 @@ def inspection_report(documents, account_id):
                             'percent fields scaled by 0.01; official Python SDK equity formula.',
         'mapped_fields': sorted(mapping),
         'trial_catalog_verified': trial,
+        'paid_catalog_verified': paid,
         'daily_metrics_received': 'daily_metrics' in documents,
-        'missing_fields': ([] if trial else ['trial']) + ['daily_metrics_binding'],
+        'missing_fields': ([] if trial or paid else ['trial']) + ['daily_metrics_binding'],
         'trading_ready': False,
         'next': 'Inspect the saved daily_metrics response; record its actual rows_path and date_path '
                 'in daily_metrics_binding, with source evidence. The documented daily-loss base is '
@@ -219,6 +286,9 @@ def snapshot(documents, config, now=None):
     mode = config.get('account_mode', 'trial')
     if adapter == 'propr-v1' and mode == 'trial':
         catalog_trial(documents, config['account_id'])
+    elif adapter == 'propr-v1' and mode == 'paid':
+        # The paid mirror of the trial check: priced catalog product, non-trial slug.
+        catalog_paid(documents, config['account_id'])
     else:
         proof = mapping['trial']
         expected = proof['equals']
@@ -248,10 +318,13 @@ def snapshot(documents, config, now=None):
         day = str(resolve(documents, mapping['day_reference']))[:10]
     if day != now.astimezone(timezone.utc).date().isoformat():
         raise ValueError('Propr day-start reference has not reset for the current UTC day')
-    for key, expected in (('daily_loss_fraction', D('.03')), ('max_drawdown_fraction', D('.06')), ('profit_target_fraction', D('.10'))):
+    verified = challenge_rules(config)
+    fractions = {}
+    for key, expected in verified.items():
         value = number(documents, mapping[key]) * D(str(mapping[key].get('scale', 1)))
         if value != expected:
-            raise ValueError('Account rules differ from Classic one-step: ' + key)
+            raise ValueError('Account rules differ from the verified configuration: ' + key)
+        fractions[key] = value
     drawdown = mapping['drawdown_type']
     if resolve(documents, drawdown) != drawdown['equals'] or str(drawdown['equals']).lower() != 'static':
         raise ValueError('Account must use static maximum drawdown')
@@ -261,4 +334,5 @@ def snapshot(documents, config, now=None):
     else:
         # Official SDK formula; the chosen mapping is recorded during setup.
         equity = balance + number(documents, mapping['unrealized_pnl']) + number(documents, mapping['isolated_position_margin'])
-    return Snapshot(starting, day_start, balance, equity, now, day)
+    return Snapshot(starting, day_start, balance, equity, now, day, fractions['daily_loss_fraction'],
+                    fractions['max_drawdown_fraction'], fractions['profit_target_fraction'])

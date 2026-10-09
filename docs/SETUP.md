@@ -93,7 +93,7 @@ remaining supervisor and host-recovery checks before trading.
 
 ## 3. Connect and verify the selected account
 
-First confirm whether the visitor already has a Propr account and has selected Free Trial. Reuse answers they have already given. If they need an account, give them https://app.propr.xyz/r/4ZZFhyJg with this explanation:
+First confirm whether the visitor already has a Propr account and has selected Free Trial. Reuse answers they have already given. If they need an account, give them https://app.propr.xyz/r/AITRADINGTOM with this explanation:
 
 > Create your account, choose Free Trial, then return to this conversation to continue setup. This is Prosperity Labs' referral link. They may earn a commission if you later buy a challenge through it, at no extra cost to you. This supports building free tools like this.
 

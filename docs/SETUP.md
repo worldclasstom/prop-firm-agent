@@ -2,14 +2,14 @@
 
 These instructions are for the AI agent doing the installation. The visitor gives you the starting prompt, chooses markets and supplies access to a Propr free trial. Install the shared framework and configure a private instance on your existing cloud VM. Handle the files, configuration and commands for them. Keep their API key, account ID, chosen markets, configuration, order history and reports in private storage on that VM, outside the source checkout. Never publish those files or send them to Prosperity Labs. Reuse the framework's execution and risk components rather than generating a separate engine for every user.
 
-The kit contains executable trading code. v0.2.0-beta.8 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
+The kit contains executable trading code. v0.2.0-beta.9 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
 
 ## 1. Install the shared release and run offline tests
 
 Use your existing cloud computer. Do not ask the visitor to buy hosting, configure SSH or keep their laptop on. If Dot delegates to Codex cloud, use a configured cloud environment for this repository. Guide only missing in-app setup and pass the repository and full instructions to the task.
 
 ```sh
-git clone --branch v0.2.0-beta.8 https://github.com/worldclasstom/prop-firm-agent.git
+git clone --branch v0.2.0-beta.9 https://github.com/worldclasstom/prop-firm-agent.git
 cd prop-firm-agent
 python3 -m venv .venv
 . .venv/bin/activate
@@ -268,6 +268,10 @@ markets remain in the universe without erasing older markets' history. Reports
 include per-market coverage, missing-day flags and an uncounted partial tail.
 An early risk stop remains a flagged scenario, not 90 successfully traded days.
 Neither the window count nor an unflagged window establishes a challenge pass.
+
+## 4a. Scheduled execution instead of a persistent worker
+
+If the platform cannot provide a supported persistent worker with network access, or the visitor used the scheduled setup prompt, use the documented revision in [SCHEDULED-EXECUTION.md](SCHEDULED-EXECUTION.md). Set `execution_model: "scheduled"` and `tick_interval_minutes` in private `config.json`, record evidence following `examples/runtime-scheduled.json`, approve as below, and schedule `propfirm tick` from the runtime in [examples/scheduled-agent](../examples/scheduled-agent) or another scheduler with persistent state and a private secret. Section 2's supervisor, host-identity and idle-recovery checks do not apply to that model; its check run replaces them. `start` refuses a scheduled configuration. Disclose the accepted risk from that document to the visitor: the equity halts are evaluated at the tick cadence, with the resting stops at Propr as the only protection between ticks.
 
 ## 4. Start and verify actual trial trading
 

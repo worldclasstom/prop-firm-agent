@@ -1,6 +1,19 @@
-# Status: v0.2.0-beta.8
+# Status: v0.2.0-beta.9
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
+
+Beta.9 adds the scheduled execution model as a documented revision
+(docs/SCHEDULED-EXECUTION.md): `propfirm tick` runs one idempotent pass per
+scheduler invocation and exits, with reduce-only stops resting at Propr as the
+only protection between ticks. It exists because eight betas could not establish
+a persistent worker with network access inside Dot's cloud computer. The trading
+rules, thresholds and shutdown protocol are the unchanged shared Engine. Twelve
+new synthetic tests cover scan timing, idempotence, resumption, stop requests,
+breaches between ticks, disclosed gaps, failures, model mixing and evidence.
+All 139 local tests pass. A private GitHub repository template
+(examples/scheduled-agent) is the reference runtime. No check run from a real
+scheduler, no live order and no Propr acceptance of runner addresses has been
+observed; the continuous model and its outstanding items below are unchanged.
 
 Beta.8 adds a trial-only broker-validation policy for unpublished order minimums.
 Unknown lower bounds stay explicit nulls with a source record. Risk ceilings,

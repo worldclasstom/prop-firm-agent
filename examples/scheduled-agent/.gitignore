@@ -1,0 +1,9 @@
+# The API key is a GitHub repository secret; it must never be a file here.
+.env
+.env.*
+# Transient SQLite and lock files; state.sqlite itself is committed.
+*.sqlite-wal
+*.sqlite-shm
+*.tmp
+worker.lock
+__pycache__/

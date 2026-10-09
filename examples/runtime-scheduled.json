@@ -1,0 +1,22 @@
+{
+  "execution_model": "scheduled",
+  "checked_at": "",
+  "config_sha256": "",
+  "scheduled_interval_minutes": 60,
+  "scheduler": {
+    "verified": false,
+    "observation": "Which scheduler runs propfirm tick, its cron expression, and the URL or log of the check run"
+  },
+  "network_access": {
+    "verified": false,
+    "observation": "The check run reached api.propr.xyz (authenticated read) and api.hyperliquid.xyz from the scheduler"
+  },
+  "persistent_state": {
+    "verified": false,
+    "observation": "Where PROPFIRM_HOME persists between runs, for example committed to the private repository"
+  },
+  "private_secrets": {
+    "verified": false,
+    "observation": "How PROPR_API_KEY reaches the tick without appearing in files, logs or chat"
+  }
+}

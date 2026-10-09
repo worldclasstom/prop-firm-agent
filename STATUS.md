@@ -52,6 +52,17 @@ target was not reached. These results are not a challenge pass rate or evidence
 of actual executions. Beta.7 changes the separate window report, not that main
 simulation's signal or risk logic; the user's data has not been rerun locally.
 
+Later screenshots report beta.7 installed with 111 tests passing. Its corrected
+report contains three complete 90-day windows and a 70-day partial tail; none
+reached the target and none were flagged by the model. These are modeled results,
+not actual challenge passes. The recovery probe restarted the inner supervisor
+in about one second, but left an unsupervised old test worker holding its lock.
+Restoring supervision required manual cleanup, so autonomous recovery failed.
+A separate ten-minute untouched cloud-desktop probe was still in progress in the
+latest screenshot; its outcome cannot establish that this orphan-worker defect
+is fixed. The repository does not contain Dot's nested-supervisor launcher, and
+no runtime fix is claimed from these observations.
+
 Still required:
 
 1. Configure and verify the trial-only broker-validation policy where lower
@@ -60,11 +71,15 @@ Still required:
    step. This exception does not establish availability, precision, stop support
    or successful actual order acceptance.
 2. Resume account-market verification through permitted tools: the screenshots
-   report 64 matches, one timeout and 89 unchecked after an approval-review
-   cancellation. Preserve results and do not bypass a review decision.
+   report 100 matches, two network failures and 52 unchecked after another
+   approval-review cancellation. Dot reports no approval form or request ID was
+   returned, so there is no identified pending user approval. Preserve results
+   and do not bypass a review decision.
 3. Observed idle/task-ending behavior and autonomous supervisor recovery on the
    actual Dot cloud host. Prior child-process and controlled supervisor restart
    tests do not establish recovery after the supervisor or host disappears.
+   Retest the observed orphan-worker failure without manual cleanup and verify
+   exactly one supervised worker; retaining the duplicate-worker lock is required.
 4. A qualifying Propr trial order, fill and confirmed protective stop, followed
    by recovery and stop-to-flat checks. No signal is valid but does not validate
    fills. A fresh-user setup is still outstanding.

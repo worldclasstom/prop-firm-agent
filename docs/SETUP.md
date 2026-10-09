@@ -41,6 +41,21 @@ LLM reminder as the five-second risk loop. Never reboot/delete the user's Dot or
 host as a surprise test. If a particular user action is necessary, give the
 smallest concrete action and preserve setup for resumption.
 
+After a supervisor crash, verify the worker's ownership as well as its heartbeat.
+The October 8 Dot probe restarted an inner supervisor while its old test worker
+remained alive without supervision and held the worker lock. Manual cleanup was
+needed; that is a failed autonomous recovery test. A later idle test passing does
+not supersede that failure. Use harmless workers to prove that the supported
+recovery mechanism restores exactly one supervised worker without manual cleanup,
+either through supported reattachment or controlled shutdown and replacement.
+Record worker and supervisor identities, lock ownership, and the recovery interval.
+Do not delete `worker.lock` to admit a replacement: a living worker can still hold
+the original file open, allowing duplicate workers if the pathname is recreated.
+Preserve trading state and shutdown/protection behavior; never use broad process
+cleanup or kill an active safety worker just to make the recovery check pass.
+Requested-stop process-group settings alone do not prove recovery from a supervisor
+crash. Capture the actual launcher/supervisor configuration before changing it.
+
 ## 3. Connect and verify the selected account
 
 First confirm whether the visitor already has a Propr account and has selected Free Trial. Reuse answers they have already given. If they need an account, give them https://app.propr.xyz/r/4ZZFhyJg with this explanation:

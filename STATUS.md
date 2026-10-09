@@ -7,7 +7,8 @@ Unknown lower bounds stay explicit nulls with a source record. Risk ceilings,
 round-down sizing, confirmed protection and all other prerequisites remain in
 force. Rejections block entries without upsizing or blind retries. This is a
 client policy revision, not newly discovered broker limits. All 123 local tests
-pass; the path is not yet authenticated in Dot. See docs/ORDER-LIMITS.md.
+pass for the release. Later screenshots report Dot configured this policy for
+145 eligible markets; no orders were submitted. See docs/ORDER-LIMITS.md.
 
 Beta.7 fixes research-window alignment: each scenario covers a full 90 UTC
 calendar days, retains earlier indicator history, and preserves the chosen
@@ -16,10 +17,11 @@ older markets; partial tails are disclosed rather than counted. Missing eligible
 market days are flagged. The main backtest and live strategy/risk rules are
 unchanged. All 111 local tests pass.
 
-The user's latest Dot screenshots report beta.6's authenticated trial-catalog,
-actual dated daily reference and live Propr marks checks passed. The trial service
-is still off. These are user-reported observations, not independently observed
-local authentication. See the current acceptance gaps below.
+The user's latest Dot screenshots report beta.8 installed, with account, daily
+reference, live marks and checkpointed market checks passed in its command
+environment. Its background runtime cannot reach the broker APIs, so the trial
+service is still off. These are user-reported observations, not independently
+observed local authentication. See the current acceptance gaps below.
 
 ## Implemented and checked
 
@@ -63,18 +65,32 @@ latest screenshot; its outcome cannot establish that this orphan-worker defect
 is fixed. The repository does not contain Dot's nested-supervisor launcher, and
 no runtime fix is claimed from these observations.
 
+The subsequent beta.8 screenshots report 123 release tests passing, all 154
+account-market matches confirmed, and 145 markets meeting history/blacklist
+filters. The ten-minute idle probe passed, and an offline recovery test using the
+actual engine passed, including a rejected close with a retained protective stop.
+Full task-ending/host recovery remains unverified. Command-context account, daily
+reference and live marks checks passed, but uninterrupted CLI verification did
+not. The background context reports network unreachable for Propr and connection
+refused for Hyperliquid. No supported setting or pending approval was identified.
+No orders were submitted; the reported research return remains -1.60%.
+
+The standalone scripts/runtime_network_probe.py now provides public, credential-free
+comparison of launch contexts with redacted environment presence and HTTP/errno
+results. It neither changes networking nor resolves the cloud limitation locally.
+All 127 repository tests pass, including four diagnostic tests for request scope,
+secret redaction, HTTP versus transport failure, and redirect refusal. Beta.8's
+published package is unchanged; the diagnostic runs separately from the checkout.
+
 Still required:
 
-1. Configure and verify the trial-only broker-validation policy where lower
-   bounds remain unpublished (or retain strict verification). Record unknowns
-   honestly; do not require the user to contact support as the default setup
-   step. This exception does not establish availability, precision, stop support
-   or successful actual order acceptance.
-2. Resume account-market verification through permitted tools: the screenshots
-   report 100 matches, two network failures and 52 unchecked after another
-   approval-review cancellation. Dot reports no approval form or request ID was
-   returned, so there is no identified pending user approval. Preserve results
-   and do not bypass a review decision.
+1. Verify authenticated REST, public data and live marks from the actual worker's
+   launch context after resolving its network failure through supported settings.
+   Preserve the selected trial policy and explicit unknown minimums; successful
+   order acceptance is still untested.
+2. Complete fresh CLI verification through permitted tools. Checkpointed market
+   results are preserved, but do not establish uninterrupted worker connectivity.
+   No pending approval request was reported; do not bypass a review decision.
 3. Observed idle/task-ending behavior and autonomous supervisor recovery on the
    actual Dot cloud host. Prior child-process and controlled supervisor restart
    tests do not establish recovery after the supervisor or host disappears.

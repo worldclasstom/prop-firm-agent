@@ -56,6 +56,26 @@ cleanup or kill an active safety worker just to make the recovery check pass.
 Requested-stop process-group settings alone do not prove recovery from a supervisor
 crash. Capture the actual launcher/supervisor configuration before changing it.
 
+If API calls work in a command tool but fail in the background worker, run
+`scripts/runtime_network_probe.py` from the repository with the worker's Python
+through each launcher. This standalone diagnostic uses public Propr health and
+Hyperliquid metadata reads. It does not load credentials, follow redirects, place
+orders, change networking, or certify readiness. Save each JSON result privately,
+label its launch context, and compare HTTP status/errno and proxy/certificate
+setting presence. It deliberately omits setting values and exception messages.
+A 401/403 is an HTTP response, not successful application access; a successful
+public probe still requires authenticated REST and live-mark verification from
+the actual worker context.
+
+Inspect the exact supervisor environment and supported platform networking
+configuration privately. Missing supported proxy or certificate configuration
+may explain a difference, but do not assume it does. Configure only documented,
+authorized settings for that runtime; do not copy temporary command-tool access
+tokens, disable certificate validation, remove an enforced proxy, create a tunnel,
+or otherwise route around platform restrictions. Recheck connectivity and recovery
+in the actual worker context after any supported correction. Command-tool success
+must not be reused as evidence that a different background environment works.
+
 ## 3. Connect and verify the selected account
 
 First confirm whether the visitor already has a Propr account and has selected Free Trial. Reuse answers they have already given. If they need an account, give them https://app.propr.xyz/r/4ZZFhyJg with this explanation:

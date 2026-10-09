@@ -173,12 +173,13 @@ def catalog_trial(documents, account_id):
 
 
 def catalog_paid(documents, account_id):
-    """Composite API evidence for a paid challenge: a priced catalog product that is not the free trial.
+    """Composite API evidence for a paid challenge: a linked catalog product that is not the free trial.
 
-    The mirror of catalog_trial for the observed catalog shape: the challenge
-    links to a product whose active one-time offers are all priced above
-    zero, under a slug other than free-trial. A narrow adapter for that
-    shape, never the display name alone, and not a provider guarantee.
+    The mirror of catalog_trial for the observed catalog shape: the same
+    identity links, under a slug other than free-trial. What the trader paid
+    for the attempt is not read; a challenge Propr gives away is still a
+    paid product with its fee at stake. Never the display name alone, and
+    not a provider guarantee.
     """
     propr_mapping(documents, account_id)
     challenge = documents['challenge']
@@ -189,12 +190,6 @@ def catalog_paid(documents, account_id):
     if (not challenge.get('productId') or product.get('productId') != challenge['productId'] or
             product.get('deletedAt') is not None):
         raise ValueError('Paid-challenge product identity could not be verified')
-    prices = [p for p in product.get('prices', [])
-              if p.get('isActive') is True and p.get('deletedAt') is None]
-    if not prices or any(p.get('productId') != product['productId'] or
-                         p.get('billingPeriod') != 'one_time' or
-                         number({'price': p}, {'source': 'price', 'path': ['price']}) <= 0 for p in prices):
-        raise ValueError('The linked paid product must have only active one-time offers priced above zero')
     return True
 
 

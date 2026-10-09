@@ -49,10 +49,12 @@ def digest(config):
 
 def validate_markets(config, *, trading=True):
     policy = config.get('order_limits_policy', 'verified')
-    if policy not in ('verified', 'trial_broker_validation'):
+    # broker_validation: unpublished minimums stay null with a limits_evidence record, orders are
+    # never resized upward, and a rejection latches the entry block. It applies to paid accounts
+    # too (operator, 2026-10-09); trial_broker_validation is the earlier name and means the same.
+    if policy not in ('verified', 'broker_validation', 'trial_broker_validation'):
         raise ValueError('Unknown order limits policy')
-    if policy == 'trial_broker_validation' and config.get('account_mode', 'trial') != 'trial':
-        raise ValueError('Broker-validation policy is restricted to free-trial accounts')
+    broker_validation = policy in ('broker_validation', 'trial_broker_validation')
     markets = config.get('markets', [])
     if not markets:
         raise ValueError('No verified markets configured. Complete instrument checks for the saved market selection; do not guess missing limits.')
@@ -63,8 +65,8 @@ def validate_markets(config, *, trading=True):
             raise ValueError('This adapter supports verified USDC-settled linear perpetuals')
         for name in ('multiplier', 'quantity_step', 'minimum_quantity', 'minimum_notional'):
             if m[name] is None and name in ('minimum_quantity', 'minimum_notional'):
-                if policy != 'trial_broker_validation' or not m.get('limits_evidence'):
-                    raise ValueError('Unknown minimum requires trial_broker_validation and a limits_evidence record')
+                if not broker_validation or not m.get('limits_evidence'):
+                    raise ValueError('Unknown minimum requires broker_validation and a limits_evidence record')
                 continue
             n = D(m[name])
             if not n.is_finite() or n <= 0:

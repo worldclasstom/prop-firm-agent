@@ -22,13 +22,15 @@ acceptance to Propr when the strategy produces a legitimate signal.
 
 ## Configuration and execution
 
-The agent selects `order_limits_policy: "trial_broker_validation"` only with
-`account_mode: "trial"`. The existing authenticated trial check still runs.
+The agent selects `order_limits_policy: "broker_validation"` (the earlier name
+`trial_broker_validation` means the same). From release 0.2.0b11 it applies to
+paid accounts as well as the trial (operator decision, 2026-10-09): the
+safeguards below are identical on both, and an order below a minimum nobody
+published is rejected by the provider and reported, never guessed around.
 Affected markets explicitly set unpublished lower bounds to JSON `null` and
 include `limits_evidence` describing sources checked and unresolved fields.
 Missing keys, zero, negative and nonfinite numbers are not valid substitutes.
-The default `verified` policy still requires positive known minima. Paid accounts
-cannot use the trial policy, even with known values.
+The `verified` policy still requires positive known minima.
 
 Contract multipliers, symbol mapping, size precision/step, sessions, account
 availability and stop capability must still be verified. Runtime checks and

@@ -28,21 +28,14 @@ class PaidCatalogTests(unittest.TestCase):
         self.assertTrue(trial['trial_catalog_verified'])
         self.assertFalse(trial['paid_catalog_verified'])
 
-    def test_paid_proof_rejects_the_trial_free_offers_ambiguity_and_other_rules(self):
+    def test_paid_proof_rejects_the_trial_broken_identity_and_bad_rules(self):
         for mutate in (
             lambda d: d['challenge'].update(slug='free-trial'),
             lambda d: d['challenge'].update(slug=''),
             lambda d: d['challenge'].pop('slug'),
-            lambda d: d['challenge']['product']['prices'][0].update(price='0'),
-            lambda d: d['challenge']['product']['prices'][0].update(price='-49'),
-            lambda d: d['challenge']['product']['prices'][0].update(price='NaN'),
-            lambda d: d['challenge']['product']['prices'][0].update(isActive=False),
-            lambda d: d['challenge']['product'].update(prices=[]),
             lambda d: d['challenge']['product'].update(productId='other'),
             lambda d: d['challenge']['product'].update(deletedAt='2026-01-01'),
-            lambda d: d['challenge']['product']['prices'][0].update(billingPeriod='monthly'),
-            lambda d: d['challenge']['product']['prices'].append(
-                {'productId': 'product', 'price': '0', 'isActive': True, 'billingPeriod': 'one_time'}),
+            lambda d: d['challenge'].update(productId=None),
             lambda d: d['challenge']['phases'][1].update(maxDailyLossPercent='0'),
             lambda d: d['challenge']['phases'][1].update(drawdownType='trailing'),
         ):
@@ -50,6 +43,18 @@ class PaidCatalogTests(unittest.TestCase):
             mutate(docs)
             with self.subTest(documents=docs), self.assertRaises((ValueError, KeyError, TypeError)):
                 catalog_paid(docs, 'a')
+
+    def test_a_challenge_propr_gave_away_is_still_a_paid_product(self):
+        # The attempt's own fee is not in the catalog; a zero or missing price list changes nothing.
+        for mutate in (
+            lambda d: d['challenge']['product']['prices'][0].update(price='0'),
+            lambda d: d['challenge']['product'].update(prices=[]),
+            lambda d: d['challenge']['product'].pop('prices'),
+        ):
+            docs = paid_documents()
+            mutate(docs)
+            with self.subTest(documents=docs):
+                self.assertTrue(catalog_paid(docs, 'a'))
 
     def test_snapshot_in_paid_mode_needs_the_paid_proof_and_trial_mode_the_trial_proof(self):
         docs = paid_documents()

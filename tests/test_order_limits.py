@@ -45,10 +45,17 @@ class OrderLimitTests(unittest.TestCase):
             cfg = trial_config(); cfg['markets'][0]['minimum_notional'] = value
             with self.assertRaises(ValueError): validate(cfg)
 
-    def test_paid_mode_cannot_use_broker_validation(self):
+    def test_paid_mode_runs_broker_validation_too_and_only_verified_insists_on_known_minima(self):
+        # Release 0.2.0b11 (operator, 2026-10-09): the same safeguards on a paid account.
         cfg = trial_config(); cfg['account_mode'] = 'paid'
+        validate(cfg)
+        cfg['order_limits_policy'] = 'broker_validation'
+        validate(cfg)
+        self.engine(cfg)
+        cfg['order_limits_policy'] = 'verified'
         with self.assertRaises(ValueError): validate(cfg)
-        with self.assertRaises(ValueError): self.engine(cfg)
+        cfg['order_limits_policy'] = 'something_else'
+        with self.assertRaises(ValueError): validate(cfg)
 
     def test_unknown_limits_do_not_bypass_stop_or_precision_checks(self):
         for key, value in (('stop_supported', False), ('quantity_step', '.03')):

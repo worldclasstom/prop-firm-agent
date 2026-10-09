@@ -234,10 +234,11 @@ contract, stop-support or runtime check use this exception.
 
 This is an explicit revision of the beta.7 preflight policy for trial order
 minimums, not an edit to the archived original specification. The strict
-`verified` policy remains the default for existing configurations; paid accounts
-cannot select the trial policy. A changed configuration requires fresh trial
-verification/approval as usual. Unknown minimums must remain disclosed in
-research results; a simulated fill cannot prove broker acceptance.
+`verified` policy remains the default for existing configurations; from release
+0.2.0b11 the broker-validation policy applies to paid accounts too, with the
+same safeguards. A changed configuration requires fresh verification/approval
+as usual. Unknown minimums must remain disclosed in research results; a
+simulated fill cannot prove broker acceptance.
 
 Checkpoint permitted read-only checks as each completes. A timeout is pending,
 not an unsupported market. On a platform approval-review cancellation, preserve
@@ -299,7 +300,7 @@ Verify the actual worker PID/supervisor, current risk heartbeat, UTC schedule, P
 
 `propfirm resume-entries` clears an entry block only after reconciliation; it does not clear a kill. `propfirm reset-halt --account-id ID --confirm-flat` is an explicit manual reset, allowed only with a stopped worker and fresh confirmation of no positions or active orders. It preserves intent history, so it cannot repeat the same day's entry.
 
-A paid challenge requires a separate private state directory, explicit account ID and `account_mode: "paid"`, observed proof of its mode and rules, fresh checks, and the separate `approve-paid --account-id ID --acknowledge-paid-risk` command. For the Propr adapter the proof of mode is the catalog, the mirror of the free-trial check: the challenge links to a product whose active one-time offers are all priced above zero, under a slug other than `free-trial` (`catalog_paid`, release 0.2.0b10). The rules check reads the product's own limits from the catalog, pins them in `challenge_rules`, and holds every tick to them; the engine's own limits are fixed shares of the product's (the day halts at two thirds of the daily loss limit, the account stops at three quarters of the static drawdown, each position risks one fifteenth of the drawdown), so Classic, Turbo and Pro at any size all run, and a trailing drawdown is refused. Do not perform that transition unless the user explicitly authorizes paid trading. The kit never purchases a challenge, transfers funds or requests payouts.
+A paid challenge requires a separate private state directory, explicit account ID and `account_mode: "paid"`, observed proof of its mode and rules, fresh checks, and the separate `approve-paid --account-id ID --acknowledge-paid-risk` command. For the Propr adapter the proof of mode is the catalog, the mirror of the free-trial check: the challenge links to a product whose active one-time offers are all priced above zero, under a slug other than `free-trial` (`catalog_paid`, release 0.2.0b11). The rules check reads the product's own limits from the catalog, pins them in `challenge_rules`, and holds every tick to them; the engine's own limits are fixed shares of the product's (the day halts at two thirds of the daily loss limit, the account stops at three quarters of the static drawdown, each position risks one fifteenth of the drawdown), so Classic, Turbo and Pro at any size all run, and a trailing drawdown is refused. Do not perform that transition unless the user explicitly authorizes paid trading. The kit never purchases a challenge, transfers funds or requests payouts.
 
 ## Attribution and updates
 

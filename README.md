@@ -25,6 +25,10 @@ The full original build prompt is preserved, unchanged, in [SPECIFICATION.md](do
 
 Passing a challenge is an aim, not a result established by this kit. Read [STATUS.md](STATUS.md) and [VALIDATION.md](docs/VALIDATION.md) for exactly what has been tested.
 
+## Additional strategies
+
+The current beta runs the original daily breakout strategy. Support for additional strategies is a planned framework requirement; it is not yet a runtime option. Each strategy will declare its own timeframe and history needs while sharing account risk controls and execution. See the [strategy extension plan](docs/STRATEGIES.md).
+
 ## Development and updates
 
 Python 3.11+ on a POSIX cloud runtime. Install with `python -m pip install .` and run `python -m unittest discover -s tests -v`.

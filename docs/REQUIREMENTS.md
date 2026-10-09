@@ -41,3 +41,7 @@ The original names `run_daily.py` and `risk_monitor.py` are responsibilities imp
 ## First user acceptance run
 
 Install the tagged release from GitHub using the page's exact setup prompt. Record cloud checks, choose markets, inspect the supplied free-trial account, configure only observed fields, run verification and the scenario backtest, approve that account, then start the supervised service. Observe a qualifying order, actual fill and protective stop; test task-ending persistence, reconnect, stop-to-flat and state-preserving restart. Until those observations exist, report them as unverified rather than dropping the corresponding requirement.
+
+## Additional user requirements
+
+On October 8, 2026, the user requested support for future strategies with their own data/timeframe requirements. This is separate from the preserved original system and does not authorize weakening its 60-daily-bar requirement. See [STRATEGIES.md](STRATEGIES.md) for the current coupling, intended module boundaries, multi-account/shared-account distinctions and acceptance criteria. Strategy selection is planned, not implemented in the current beta.

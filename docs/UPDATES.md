@@ -2,6 +2,8 @@
 
 Install an exact release. `v0.2.0-beta.9` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence.
 
+Releases are published automatically. A merged commit on `main` that bumps the version in both `pyproject.toml` and `propfirm/__init__.py` triggers `.github/workflows/release.yml`, which derives the tag (`0.2.0b9` becomes `v0.2.0-beta.9`), skips when that tag exists, runs the offline tests and `propfirm doctor`, and publishes a GitHub Release marked pre-release for alpha, beta and rc versions. Tags are never pushed by hand, and a version that is bumped in only one file fails the release. The running trader is never affected: a release is a pinned checkout that an operator adopts through the steps below.
+
 Beta.8 adds an explicit trial-only policy for unpublished order minimums; it is
 not a claim that missing values equal zero. Read [ORDER-LIMITS.md](ORDER-LIMITS.md).
 Existing configurations keep the strict `verified` default. Setup can select

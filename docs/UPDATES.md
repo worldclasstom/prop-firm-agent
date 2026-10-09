@@ -1,12 +1,19 @@
 # Versions and updates
 
-Install an exact release. `v0.2.0-beta.6` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence. Beta.6 adds `daily-metrics`, joins active phases by ID, verifies the linked trial
-catalog, uses live Propr WebSocket marks for equity, and separates historical
-research from broker verification. It requires the pinned `websockets` dependency
+Install an exact release. `v0.2.0-beta.7` includes execution code but awaits real-account and Dot cloud acceptance testing. See STATUS.md for observed evidence. Beta.7 corrects research windows to use complete
+90-day calendar intervals and each market's actual history, and distinguishes an
+empty verified watchlist from duplicate identifiers. It does not resolve missing
+broker limits or cloud lifecycle evidence, and does not change live signals,
+orders or risk thresholds. Preserve beta.6 account bindings and completed checks;
+do not redo key entry or account selection.
+
+Beta.6 added `daily-metrics`, ID-based active phase joins, linked trial-catalog
+verification, live Propr WebSocket marks for equity, and historical research
+separate from broker verification. It requires the pinned `websockets` dependency
 installed by pip. It does not migrate or overwrite private configuration,
 approvals or trading state.
 
-For the existing stopped Dot setup, preserve the saved key, selected account,
+For installations older than beta.6, preserve the saved key, selected account,
 non-FX preferences, completed checks and private files. Follow SETUP.md to inspect
 the selected account again, set `account_adapter: "propr-v1"`, copy the generated
 mappings, and bind the actual daily-metrics envelope/date. Do not delete state or
@@ -17,7 +24,7 @@ new Propr live-equity or catalog checks.
 
 ```sh
 propfirm check-update
-propfirm prepare-update --version v0.2.0-beta.6
+propfirm prepare-update --version v0.2.0-beta.7
 ```
 
 The first command reads releases and notes. The second clones the requested release into a separate directory under the private kit home, creates a virtual environment and runs the tests with isolated test state and no inherited API key. It never changes or restarts the running worker. A visitor normally uses this shared upstream; fork only when contributing a change.

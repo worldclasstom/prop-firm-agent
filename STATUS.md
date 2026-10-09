@@ -1,19 +1,18 @@
-# Status: v0.2.0-beta.6
+# Status: v0.2.0-beta.7
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
 
-This release fixes the account/phase joins found in the first authenticated Dot
-setup. It adds the documented daily-metrics read, a narrow composite trial-catalog
-check, and WebSocket mark prices for risk equity. Historical research no longer
-waits for broker account verification. All 105 local tests pass, including socket
-handshake/read/shutdown and redirect rejection with synthetic credentials. The
-original strategy and risk thresholds remain unchanged.
+Beta.7 fixes research-window alignment: each scenario covers a full 90 UTC
+calendar days, retains earlier indicator history, and preserves the chosen
+universe and each asset's inception date. Short histories no longer truncate
+older markets; partial tails are disclosed rather than counted. Missing eligible
+market days are flagged. The main backtest and live strategy/risk rules are
+unchanged. All 111 local tests pass.
 
-The redacted diagnostic's actual structure passes the eight automatic mappings
-and composite trial-product check. Its monetary values, dates and identifiers are
-synthetic and were not used as live configuration. The newly discovered
-`daily-metrics` response and live Propr mark stream still need the authenticated
-Dot run; local tests do not establish successful trial trading.
+The user's latest Dot screenshots report beta.6's authenticated trial-catalog,
+actual dated daily reference and live Propr marks checks passed. The trial service
+is still off. These are user-reported observations, not independently observed
+local authentication. See the current acceptance gaps below.
 
 ## Implemented and checked
 
@@ -35,11 +34,33 @@ Beta.3 adds a one-field browser form and tests its save path with synthetic cred
 
 Beta.4 addresses the next user-reported Dot failure: four form tests failed under empty Git markers in the cloud workspace. Regression tests now simulate nested empty markers through the actual HTTP save path, while confirming real repositories and symlink aliases remain excluded. The user subsequently supplied screenshots showing successful browser takeover, masked key entry, the API key saved screen, and control returned to Dot on its locally patched beta.3 installation (Dot reported 77 tests). That confirms the form/handoff path in the user's cloud run; the exact unmodified beta.4 release and authenticated account/trading checks still need acceptance.
 
-## What still needs the first real user run
+## Latest Dot feedback and remaining acceptance
 
-1. Run beta.6 against the already selected account, inspect and bind the actual daily-metrics envelope/date field, and verify the Propr live mark stream. Discovery, selection and key entry were observed in user screenshots; this release has not yet been authenticated in Dot.
-2. The user's chosen markets, checked against that account's API/stop support and instrument metadata.
-3. Observed Dot/cloud support for persistent background execution across idle periods, task endings and supervisor restarts.
-4. A qualifying real Propr trial order, fill and confirmed protective stop, followed by recovery and stop-to-flat checks. No signal is valid but does not validate fills.
+October 8 screenshots report 105 offline tests passed in beta.6; the selected
+trial account, actual UTC daily reference and live marks were verified. All 154
+histories were refreshed. RUNE was excluded after a reported Propr blacklist
+change. The 145-market venue-research run reported -1.60% marked return, 4.71%
+peak-to-trough drawdown, 51 closed trades and three open modeled positions. The
+target was not reached. These results are not a challenge pass rate or evidence
+of actual executions. Beta.7 changes the separate window report, not that main
+simulation's signal or risk logic; the user's data has not been rerun locally.
 
-The user reports an authenticated connection in Dot. This release addresses its adapter gaps using the diagnostic and newly located official Integration documentation; applying it and verifying daily-metrics remain outstanding (see docs/VALIDATION.md). No Propr account has been connected in this local development session. No actual order has been sent. Offline tests and public market-data checks do not establish strategy performance or guarantee challenge outcomes. See docs/VALIDATION.md and docs/REQUIREMENTS.md.
+Still required:
+
+1. Authoritative Propr minimum quantities (reported missing for 147 candidates)
+   and minimum notionals (reported missing for all 154). The public developer
+   reference lists seven minimum quantities, not a complete limits endpoint.
+   Availability/precision evidence alone does not establish order minimums.
+2. Resume account-market verification through permitted tools: the screenshots
+   report 64 matches, one timeout and 89 unchecked after an approval-review
+   cancellation. Preserve results and do not bypass a review decision.
+3. Observed idle/task-ending behavior and autonomous supervisor recovery on the
+   actual Dot cloud host. Prior child-process and controlled supervisor restart
+   tests do not establish recovery after the supervisor or host disappears.
+4. A qualifying Propr trial order, fill and confirmed protective stop, followed
+   by recovery and stop-to-flat checks. No signal is valid but does not validate
+   fills. A fresh-user setup is still outstanding.
+
+No Propr account has been connected in this local development session and no
+actual order has been sent. Local tests and public documentation do not establish
+strategy performance or guarantee challenge outcomes. See docs/VALIDATION.md.

@@ -149,7 +149,7 @@ def main():
         return 0
     if args.command == 'backtest':
         config = validate_research(read_json(args.config or root / 'config.json'))
-        from .backtest import simulate
+        from .backtest import simulate, challenge_windows
         markets = {m['asset']: m for m in config['markets']}
         histories = {a: data.candles(m) for a,m in markets.items()}
         costs = config.get('backtest_costs', {})
@@ -158,18 +158,10 @@ def main():
         result = simulate(histories, markets, initial=initial, fee=D(costs.get('fee_per_side', '.00075')),
                           slippage=D(costs.get('slippage_per_side', '.0005')),
                           funding=D(costs.get('daily_funding_cost', '.0001')))
-        windows = []
-        length = min(len(rows) for rows in histories.values())
-        # Non-overlapping 90-day test windows, each with its own preceding 60-bar warmup.
-        for start in range(60, length-29, 90):
-            segment = {a: rows[-length:][start-60:min(start+90, length)] for a, rows in histories.items()}
-            window = simulate(segment, markets, initial=initial, fee=D(costs.get('fee_per_side', '.00075')),
-                              slippage=D(costs.get('slippage_per_side', '.0005')),
-                              funding=D(costs.get('daily_funding_cost', '.0001')))
-            windows.append({'start_index': start, 'failure_or_uncertainty': window['failure_or_uncertainty']})
-        result['challenge_windows'] = windows
-        result['flagged_windows'] = sum(w['failure_or_uncertainty'] is not None for w in windows)
-        result['window_denominator'] = len(windows)
+        result.update(challenge_windows(histories, markets, initial=initial,
+                      fee=D(costs.get('fee_per_side', '.00075')),
+                      slippage=D(costs.get('slippage_per_side', '.0005')),
+                      funding=D(costs.get('daily_funding_cost', '.0001'))))
         result['history_bars'] = {a: len(rows) for a, rows in histories.items()}
         result['version'] = __version__
         result['research_only'] = True

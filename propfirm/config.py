@@ -49,8 +49,10 @@ def digest(config):
 
 def validate_markets(config, *, trading=True):
     markets = config.get('markets', [])
-    if not markets or len({m['asset'] for m in markets}) != len(markets):
-        raise ValueError('Select a unique market watchlist')
+    if not markets:
+        raise ValueError('No verified markets configured. Complete instrument checks for the saved market selection; do not guess missing limits.')
+    if len({m['asset'] for m in markets}) != len(markets):
+        raise ValueError('Duplicate market identifiers in configured watchlist')
     for m in markets:
         if m['quote'] != 'USDC' or m.get('product_type') != 'perp':
             raise ValueError('This adapter supports verified USDC-settled linear perpetuals')

@@ -211,6 +211,8 @@ class ResearchTests(unittest.TestCase):
             result = json.loads((root / 'reports/backtest.json').read_text())
             self.assertTrue(result['research_only']); self.assertFalse(result['account_verified'])
             self.assertEqual(result['initial_balance_assumption'], '5000')
+            self.assertEqual(result['window_denominator'], 0)
+            self.assertEqual(result['partial_tail_days'], 5)
             self.assertEqual((root / 'config.json').read_text(), 'preserve live config')
             self.assertFalse((root / 'approval.json').exists())
 

@@ -88,3 +88,37 @@ adapter tests. The original prompt preservation test remains unchanged.
 The beta.6 package was installed into a clean virtual environment and all 105 tests
 passed from outside the source checkout on Python 3.14.7. This also verified the
 pinned WebSocket dependency and installed CLI version.
+
+## 2026-10-08: authenticated Dot feedback and research windows (beta.7)
+
+The user's screenshots report beta.6 passed its actual trial-catalog, dated UTC
+daily reference and Propr live-mark checks. The account had no orders/positions.
+Dot still reported unverified idle/task-ending and autonomous supervisor recovery,
+missing broker order minimums, and interrupted account-market checks (64 matched,
+one timeout, 89 pending). These are relayed observations, not local authenticated
+tests. Trading has not been reported running.
+
+Code inspection found that the separate research-window report truncated every
+asset to the shortest history and aligned assets by array position. It also
+counted some partial tails as windows. Beta.7 instead uses complete 90-day UTC
+intervals, preserves each asset's inception and full earlier indicator history,
+and discloses market gaps and partial tails. The main simulation is unchanged
+when no start boundary is supplied. No user's historical data was rerun here;
+the previously reported -1.60% result has not been replaced with a new result.
+
+All 111 local tests pass. Six new regression tests cover mixed listing ages,
+calendar alignment, late eligibility, complete-window boundaries, missing dates,
+retained indicator history/future exclusion and distinct empty/duplicate
+watchlist errors. Tests use synthetic histories; no order is sent.
+
+The beta.7 package was also installed and all 111 tests passed from outside the
+source checkout on Python 3.14.7; the installed CLI reports `0.2.0b7`.
+
+Public documentation inspected October 8: [Propr Account Settings and trading
+reference](https://www.propr.xyz/developers) lists seven minimum quantities but
+does not document a complete broker quantity/notional limits response in the
+sections inspected. Its margin-config example is availability/leverage evidence.
+[Dot computers](https://learn.chatgpt.com/docs/dots/computers-and-apps) and
+[tasks](https://learn.chatgpt.com/docs/dots/tasks-and-memory) describe cloud work
+and persistence, but do not establish arbitrary daemon autostart after host
+termination. Actual platform-supported lifecycle tests remain necessary.

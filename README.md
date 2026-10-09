@@ -45,7 +45,7 @@ Updates are explicit and versioned. The kit never silently replaces a running tr
 
 The kit includes Prosperity Labs' public Propr Builder Code for API attribution. It is configurable and can be disabled. It is not your trading API key. We do not claim guaranteed builder rewards or eligibility.
 
-[Start a Propr free trial](https://app.propr.xyz/r/4ZZFhyJg). Thomas earns a commission if you later buy a challenge through this referral link, at no extra cost to you. This supports building free tools like this. Propr accounts are simulated; the advertised payouts are USDC. Propr has not reviewed or approved this strategy.
+[Start a Propr free trial](https://app.propr.xyz/r/AITRADINGTOM). Thomas earns a commission if you later buy a challenge through this referral link, at no extra cost to you. This supports building free tools like this. Propr accounts are simulated; the advertised payouts are USDC. Propr has not reviewed or approved this strategy.
 
 ## Risk
 

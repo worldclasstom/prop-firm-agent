@@ -9,14 +9,14 @@ five-second supervisor checks or `propfirm start` command.
 
 These instructions are for the AI agent doing the installation. The visitor chooses markets and a Propr free trial. Install the shared framework and configure a private instance. Keep their API key, account ID, market choices, configuration, order history and reports in private storage outside the public source checkout. Never publish those files or send them to Prosperity Labs. Reuse the framework's execution and risk components rather than generating a separate engine for every user.
 
-The kit contains executable trading code. v0.2.0-beta.12 is a trial-testing beta. Mocked execution tests pass, but real Propr execution from a viewer-owned scheduler has not yet been verified end to end. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
+The kit contains executable trading code. v0.2.0-beta.13 is a trial-testing beta. Mocked execution tests pass, but real Propr execution from a viewer-owned scheduler has not yet been verified end to end. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
 
 ## 1. Install the shared release and run offline tests
 
 Use your existing cloud computer. Do not ask the visitor to buy hosting, configure SSH or keep their laptop on. If Dot delegates to Codex cloud, use a configured cloud environment for this repository. Guide only missing in-app setup and pass the repository and full instructions to the task.
 
 ```sh
-git clone --branch v0.2.0-beta.12 https://github.com/worldclasstom/prop-firm-agent.git
+git clone --branch v0.2.0-beta.13 https://github.com/worldclasstom/prop-firm-agent.git
 cd prop-firm-agent
 python3 -m venv .venv
 . .venv/bin/activate
@@ -111,7 +111,14 @@ First confirm whether the visitor already has a Propr account and has selected F
 
 Use an existing account when they have one. Do not ask for a duplicate account or a paid challenge. Their confirmation helps setup; it does not replace the API checks below that verify the selected account is a free trial before orders are allowed.
 
-After offline tests pass, use the platform's native private credential form if it can supply `PROPR_API_KEY` to this worker. Otherwise use the kit's built-in form:
+For the current scheduled cloud path, follow [SETUP-CLOUD.md](SETUP-CLOUD.md):
+guide the visitor to set `PROPR_API_KEY` in their private cloud environment
+settings, then separately verify the hourly runtime can read it. The loopback
+form below is an alternative for a platform with a verified same-host browser
+handoff; do not assume an ordinary desktop browser can reach cloud localhost.
+For a continuous or same-host setup, use the platform's native private
+credential form if it can supply `PROPR_API_KEY` to this worker. Otherwise use
+the kit's built-in form:
 
 ```sh
 propfirm connect

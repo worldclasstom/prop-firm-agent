@@ -1,4 +1,11 @@
-# Status: v0.2.0-beta.12
+# Status: v0.2.0-beta.13
+
+Beta.13 clarifies the public cloud setup: an ordinary chat hands off to a
+Claude Code or Codex cloud coding task, and the viewer enters `PROPR_API_KEY`
+in their private cloud environment settings after offline tests. The hourly
+runtime must separately prove access to the key and persistent state. No
+strategy, risk or execution code changed. Viewer-owned live acceptance remains
+outstanding. All 139 local tests pass with the declared dependencies installed.
 
 Beta.12 makes the scheduled execution model the public standalone Agent Kit
 setup flow for Claude Code and Codex cloud sessions. It adds cloud-specific

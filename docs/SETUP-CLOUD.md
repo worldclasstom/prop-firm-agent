@@ -3,12 +3,45 @@
 This is the viewer-facing route for the standalone Agent Kit. It does not use
 Tally or a Prosperity Labs account. Start a **cloud** coding session in Claude
 Code Desktop or Codex in the ChatGPT desktop app, then paste the prompt in
-[START-PROMPT-SCHEDULED.md](START-PROMPT-SCHEDULED.md). The coding agent handles
-the files and checks; the visitor chooses a Propr free trial and markets and
-enters their own key privately.
+[START-PROMPT-SCHEDULED.md](START-PROMPT-SCHEDULED.md). If the prompt lands in
+an ordinary chat, that assistant should guide the person to a cloud coding
+task and ask them to paste the same prompt there before installing anything.
+The coding agent handles the files and checks; the visitor chooses a Propr free
+trial and markets and enters their own key privately.
 
 The trading program is deterministic Python. The AI session sets it up and
 reviews reports; it does not decide whether to trade on each scheduled run.
+
+## If the prompt starts in a regular chat
+
+The assistant should give the smallest handoff for the app in use, then have
+the visitor paste the same prompt in the new cloud coding task. In Claude
+Desktop, open the **Code** tab, select **Cloud**, and start a session. In Codex,
+choose **Work in > Cloud**, then select a published environment or create one
+with this repository and publish it. Do not claim that an ordinary chat has
+installed the kit or started an hourly trader. Continue setup from the cloud
+task rather than making the visitor rewrite the prompt.
+
+## Connect the Propr key in the cloud environment
+
+After offline tests pass, guide the person to Propr **Settings > Developer** to
+create an API key. They add it to their *private* Claude Code or Codex cloud
+environment settings as the environment variable `PROPR_API_KEY`. This gives
+the coding agent access to the key; it is not hidden from the agent. Tell the
+person who else can use that environment before they save it. Verify the key
+works with a read-only account request without printing or logging the value.
+Do not make the loopback `propfirm connect` form the default cloud path: use it
+only if the cloud platform actually offers a same-host private browser handoff.
+
+The setup environment's variable does not automatically follow the trader to
+its hourly runtime. A Claude Cloud routine must use an environment that can
+read `PROPR_API_KEY` on every run and persist account state. A GitHub Actions
+runtime instead needs `PROPR_API_KEY` entered once into that private
+repository's Actions secret form. Test the actual runtime with read-only
+requests before approval. A domain-scoped network secret may be preferable
+when supported, but this kit currently reads `PROPR_API_KEY` as an environment
+variable and has not been validated with secret injection. Do not claim that
+adding a network secret alone connects this release.
 
 ## What runs after setup
 
@@ -44,7 +77,8 @@ run widens the gap. Do not describe a completed setup task as a running trader.
    delay a scheduled run. Observe a read-only check from the runner before
    enabling any trial orders.
 
-Do not place the key in chat, a commit, or a public repository. Do not ask the
+Use environment settings for key entry by default; the user may choose what
+to disclose to their own AI session. Never commit or log the key. Do not ask the
 visitor to rent a server. Reuse the account and market verification steps in
 [SETUP.md](SETUP.md), but use scheduled runtime evidence and `tick` instead of
 the continuous supervisor checks and `start` command. This is a trial-testing

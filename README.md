@@ -2,7 +2,7 @@
 
 A shared framework for building your own Propr trading agent. Start in a cloud session in Claude Code or Codex and give it the [setup prompt](docs/START-PROMPT-SCHEDULED.md). It installs the framework, asks which markets you want and helps configure a private scheduled trading instance you control. This kit is separate from the hosted Tally product.
 
-**Trial-testing beta: v0.2.0-beta.12.** This release contains order-execution code, protective stops, exits and an hourly `tick` option. Automated tests use simulated API responses. Real Propr execution from a viewer-owned scheduler still needs an end-to-end acceptance test. The kit checks prerequisites and reports blockers before it starts.
+**Trial-testing beta: v0.2.0-beta.13.** This release contains order-execution code, protective stops, exits and an hourly `tick` option. Automated tests use simulated API responses. Real Propr execution from a viewer-owned scheduler still needs an end-to-end acceptance test. The kit checks prerequisites and reports blockers before it starts.
 
 The [Agent Kit page](https://prosperitylabs.co/agent) contains the rules and starting prompt. This repository is the shared framework and update source. It supplies reusable strategy, order-execution and risk-management components, tests and setup instructions. Your AI configures those components for your own account; it does not need to rewrite the order engine.
 

@@ -1,4 +1,12 @@
-# Status: v0.2.0-beta.9
+# Status: v0.2.0-beta.12
+
+Beta.12 makes the scheduled execution model the public standalone Agent Kit
+setup flow for Claude Code and Codex cloud sessions. It adds cloud-specific
+setup guidance and a matching pinned private scheduler template. Trading,
+strategy, risk thresholds and the scheduled tick implementation are unchanged
+from beta.9. All 139 local tests pass with the declared dependencies installed.
+No viewer-owned cloud routine or GitHub Actions trial order has been accepted
+end to end; do not report one as live based on offline tests.
 
 **Executable trial-testing beta.** The repository now contains the trading path: Propr order submission, partial-fill protection, stops, exits, daily scheduling, continuous risk polling and verified-flat shutdown. The landing-page setup prompt installs this release and follows the preserved full specification.
 

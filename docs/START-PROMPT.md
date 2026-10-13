@@ -1,4 +1,8 @@
-# Setup prompt
+# Legacy continuous-worker setup prompt
+
+For the current Claude Code / Codex cloud flow, use
+[START-PROMPT-SCHEDULED.md](START-PROMPT-SCHEDULED.md). The prompt below is
+retained for the older continuous-worker model.
 
 ```text
 Set up my own trading agent using the Prosperity Labs Agent Kit framework from

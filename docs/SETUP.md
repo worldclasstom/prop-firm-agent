@@ -1,15 +1,22 @@
 # Set up and run the kit
 
-These instructions are for the AI agent doing the installation. The visitor gives you the starting prompt, chooses markets and supplies access to a Propr free trial. Install the shared framework and configure a private instance on your existing cloud VM. Handle the files, configuration and commands for them. Keep their API key, account ID, chosen markets, configuration, order history and reports in private storage on that VM, outside the source checkout. Never publish those files or send them to Prosperity Labs. Reuse the framework's execution and risk components rather than generating a separate engine for every user.
+For the current public Claude Code / Codex cloud flow, start with
+[SETUP-CLOUD.md](SETUP-CLOUD.md). This document retains the original continuous
+worker path and the reusable account/market verification steps. The scheduled
+model uses `propfirm tick` and the evidence in
+[SCHEDULED-EXECUTION.md](SCHEDULED-EXECUTION.md), not this document's
+five-second supervisor checks or `propfirm start` command.
 
-The kit contains executable trading code. v0.2.0-beta.9 is a trial-testing beta. Mocked execution tests pass, but real Propr execution and Dot cloud persistence have not yet been verified together. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
+These instructions are for the AI agent doing the installation. The visitor chooses markets and a Propr free trial. Install the shared framework and configure a private instance. Keep their API key, account ID, market choices, configuration, order history and reports in private storage outside the public source checkout. Never publish those files or send them to Prosperity Labs. Reuse the framework's execution and risk components rather than generating a separate engine for every user.
+
+The kit contains executable trading code. v0.2.0-beta.12 is a trial-testing beta. Mocked execution tests pass, but real Propr execution from a viewer-owned scheduler has not yet been verified end to end. Report that distinction plainly. Do not rebuild the strategy from scratch or claim you started it merely because installation succeeded.
 
 ## 1. Install the shared release and run offline tests
 
 Use your existing cloud computer. Do not ask the visitor to buy hosting, configure SSH or keep their laptop on. If Dot delegates to Codex cloud, use a configured cloud environment for this repository. Guide only missing in-app setup and pass the repository and full instructions to the task.
 
 ```sh
-git clone --branch v0.2.0-beta.9 https://github.com/worldclasstom/prop-firm-agent.git
+git clone --branch v0.2.0-beta.12 https://github.com/worldclasstom/prop-firm-agent.git
 cd prop-firm-agent
 python3 -m venv .venv
 . .venv/bin/activate
@@ -23,7 +30,12 @@ Python 3.11+ and a POSIX cloud runtime are required. Do not change the user's op
 
 Read [SPECIFICATION.md](SPECIFICATION.md). The original full build prompt is preserved unchanged there and in [original-build-prompt.txt](original-build-prompt.txt). Use [REQUIREMENTS.md](REQUIREMENTS.md) to check implementation and outstanding validation.
 
-## 2. Check the cloud runtime and prepare the watchlist
+## 2. Check the continuous-worker runtime and prepare the watchlist
+
+The supervisor, host-identity and idle-recovery instructions below apply only
+to `execution_model: "continuous"`. In the public scheduled flow, use
+[SETUP-CLOUD.md](SETUP-CLOUD.md) and the scheduled runtime check instead, then
+return to section 3 for the shared account and market verification steps.
 
 Ask the visitor which Propr markets they want. Use `propfirm markets` for native Hyperliquid perpetuals and `propfirm markets --dex xyz` for that builder's markets. Preserve exact identifiers such as `xyz:GOLD`; other namespaces must be verified against the provider's metadata.
 
@@ -93,7 +105,7 @@ remaining supervisor and host-recovery checks before trading.
 
 ## 3. Connect and verify the selected account
 
-First confirm whether the visitor already has a Propr account and has selected Free Trial. Reuse answers they have already given. If they need an account, give them https://app.propr.xyz/r/4ZZFhyJg with this explanation:
+First confirm whether the visitor already has a Propr account and has selected Free Trial. Reuse answers they have already given. If they need an account, give them https://app.propr.xyz/r/AITRADINGTOM with this explanation:
 
 > Create your account, choose Free Trial, then return to this conversation to continue setup. This is Prosperity Labs' referral link. They may earn a commission if you later buy a challenge through it, at no extra cost to you. This supports building free tools like this.
 
@@ -271,9 +283,14 @@ Neither the window count nor an unflagged window establishes a challenge pass.
 
 ## 4a. Scheduled execution instead of a persistent worker
 
-If the platform cannot provide a supported persistent worker with network access, or the visitor used the scheduled setup prompt, use the documented revision in [SCHEDULED-EXECUTION.md](SCHEDULED-EXECUTION.md). Set `execution_model: "scheduled"` and `tick_interval_minutes` in private `config.json`, record evidence following `examples/runtime-scheduled.json`, approve as below, and schedule `propfirm tick` from the runtime in [examples/scheduled-agent](../examples/scheduled-agent) or another scheduler with persistent state and a private secret. Section 2's supervisor, host-identity and idle-recovery checks do not apply to that model; its check run replaces them. `start` refuses a scheduled configuration. Disclose the accepted risk from that document to the visitor: the equity halts are evaluated at the tick cadence, with the resting stops at Propr as the only protection between ticks.
+If the visitor used the current public setup prompt, use the documented revision in [SCHEDULED-EXECUTION.md](SCHEDULED-EXECUTION.md). Set `execution_model: "scheduled"` and `tick_interval_minutes` in private `config.json`, record evidence following `examples/runtime-scheduled.json`, approve as below, and schedule `propfirm tick` from the runtime in [examples/scheduled-agent](../examples/scheduled-agent) or another scheduler with persistent state and a private secret. Section 2's supervisor, host-identity and idle-recovery checks do not apply to that model; its check run replaces them. `start` refuses a scheduled configuration. Disclose the accepted risk from that document to the visitor: the equity halts are evaluated at the tick cadence, with the resting stops at Propr as the only protection between ticks.
 
-## 4. Start and verify actual trial trading
+## 4. Start and verify actual trial trading (continuous model only)
+
+The public scheduled flow uses the private scheduler's read-only check,
+`approve-trial`, and `propfirm tick` instead. See
+[SETUP-CLOUD.md](SETUP-CLOUD.md) and
+[SCHEDULED-EXECUTION.md](SCHEDULED-EXECUTION.md).
 
 Use an empty, dedicated trial account so the service can manage every position on it. Keep `account_mode` set to `trial`. Finish runtime evidence, record the config digest with the command below, and set `checked_at` to the actual observation timestamp. The setup agent handles this technical step.
 

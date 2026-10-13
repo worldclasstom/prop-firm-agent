@@ -2,7 +2,7 @@
 
 Read README.md, STATUS.md and docs/SPECIFICATION.md before work. The full specification is immutable archived source material. Install the shared execution code; do not replace it with a fresh generated implementation. Use docs/REQUIREMENTS.md to track every requirement and remaining acceptance check. Code existing is not evidence that a service is running.
 
-Use the existing cloud environment. Never silently switch to a user's laptop or paid hosting. Record platform checks and limitations. Do not ask for trading credentials until offline checks pass and actual connection code is ready.
+For the public setup prompt, use the cloud option in Claude Code or Codex and the scheduled model in docs/SETUP-CLOUD.md. Never silently switch to a user's laptop, Tally's hosted service or paid hosting. Record platform checks and limitations. Do not ask for trading credentials until offline checks pass and actual connection code is ready.
 
 Preserve user files and private state. Never commit keys, .env, account exports, positions or reports. The public builder attribution code is intentionally distributable and configurable.
 

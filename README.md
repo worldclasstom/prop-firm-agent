@@ -1,16 +1,16 @@
 # Prosperity Labs Agent Kit
 
-A shared framework for building your own Propr trading agent. Give your cloud agent the [setup prompt](docs/START-PROMPT.md); it installs the framework, asks which markets you want and configures your private trading instance on its own cloud VM.
+A shared framework for building your own Propr trading agent. Start in a cloud session in Claude Code or Codex and give it the [setup prompt](docs/START-PROMPT-SCHEDULED.md). It installs the framework, asks which markets you want and helps configure a private scheduled trading instance you control. This kit is separate from the hosted Tally product.
 
-**Trial-testing beta: v0.2.0-beta.9.** This release contains order-execution code, protective stops, exits, risk monitoring, a daily scheduler and a scheduled execution model. Automated tests use simulated API responses. Real Propr execution and Dot's background runtime still need an end-to-end acceptance test. The kit checks those prerequisites and reports blockers before it starts.
+**Trial-testing beta: v0.2.0-beta.12.** This release contains order-execution code, protective stops, exits and an hourly `tick` option. Automated tests use simulated API responses. Real Propr execution from a viewer-owned scheduler still needs an end-to-end acceptance test. The kit checks prerequisites and reports blockers before it starts.
 
 The [Agent Kit page](https://prosperitylabs.co/agent) contains the rules and starting prompt. This repository is the shared framework and update source. It supplies reusable strategy, order-execution and risk-management components, tests and setup instructions. Your AI configures those components for your own account; it does not need to rewrite the order engine.
 
-Your API key, account ID, chosen markets, personal configuration, order history, reports and running services belong only on your agent's private cloud VM. Store private files outside the source checkout. Never push them to this public repository or a public fork. Prosperity Labs does not receive your key or operate your account.
+Your API key, account ID, chosen markets, personal configuration, order history, reports and schedule belong only in your private setup. The scheduled template keeps the key in a private repository secret and state in that private repository. Never push them to this public repository or a public fork. Prosperity Labs does not receive your key or operate your account.
 
 ## Start here
 
-Copy [the setup prompt](docs/START-PROMPT.md) into Dot or another coding agent with a cloud computer. You choose markets and confirm which Propr account to use from the list your agent retrieves. The agent opens a private form where you paste your API key and click **Save API key**. It then lists your accounts; you do not need to find or type an account ID. The agent follows [SETUP.md](docs/SETUP.md), runs the checks and starts the actual service when they pass. You do not need to choose a hosting provider.
+Copy [the setup prompt](docs/START-PROMPT-SCHEDULED.md) into a Claude Code or Codex **cloud** session. You choose markets and confirm which Propr account to use from the list your agent retrieves. Enter your API key only through private secret entry. The agent follows [SETUP-CLOUD.md](docs/SETUP-CLOUD.md), runs the checks and configures a scheduler in your own account when they pass. You do not need to rent a server. Claude cloud routines are an option only when private secrets and durable state are verified; the included GitHub Actions template is the common reference runtime.
 
 The full original build prompt is preserved, unchanged, in [SPECIFICATION.md](docs/SPECIFICATION.md) and [original-build-prompt.txt](docs/original-build-prompt.txt). The [requirements map](docs/REQUIREMENTS.md) connects those instructions to the implementation and testing limits.
 
@@ -25,9 +25,9 @@ The full original build prompt is preserved, unchanged, in [SPECIFICATION.md](do
 
 Passing a challenge is an aim, not a result established by this kit. Read [STATUS.md](STATUS.md) and [VALIDATION.md](docs/VALIDATION.md) for exactly what has been tested.
 
-## Scheduled execution (draft revision)
+## Scheduled execution
 
-Beta.9 adds `propfirm tick`: one idempotent run per scheduler invocation that reconciles, confirms every position's resting stop at Propr, scans once per UTC date at/after 00:10, reports and exits. It removes the need for a persistent worker inside an AI tool's cloud computer. The documented revision, the accepted risk and the private GitHub repository template are in [SCHEDULED-EXECUTION.md](docs/SCHEDULED-EXECUTION.md), [examples/scheduled-agent](examples/scheduled-agent) and the draft [scheduled setup prompt](docs/START-PROMPT-SCHEDULED.md). It is tested with synthetic API fixtures only; no live acceptance run exists yet.
+Beta.9 adds `propfirm tick`: one idempotent run per scheduler invocation that reconciles, confirms every position's resting stop at Propr, scans once per UTC date at/after 00:10, reports and exits. It removes the need for a persistent worker inside an AI tool's cloud computer. The documented revision, the accepted risk and the private GitHub repository template are in [SCHEDULED-EXECUTION.md](docs/SCHEDULED-EXECUTION.md), [examples/scheduled-agent](examples/scheduled-agent) and the [scheduled setup prompt](docs/START-PROMPT-SCHEDULED.md). It is tested with synthetic API fixtures only; no live acceptance run exists yet.
 
 ## Additional strategies
 
